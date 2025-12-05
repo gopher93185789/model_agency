@@ -24,6 +24,7 @@ var staticFs embed.FS
 
 const sessionCookieName string = "duke_dennis"
 const sessionExp = 6 * time.Hour
+const middlewareToken = "token"
 
 type storePayload struct {
 	UserId     uuid.UUID
@@ -165,29 +166,52 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	respondWithJson(w, http.StatusOK, map[string]string{"message": "login successful", "role": info.Role})
 }
 
+/*
+# to get user info easy for lazy nihg:
+
+	info, err := s.store.Get(w.Header().Get(middlewareToken))
+	if err != nil {
+		return
+	}
+*/
+func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			sessionid string
+		)
+
+		cookie, err := r.Cookie(sessionCookieName)
+		if err != nil || cookie.Value == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		sessionid = cookie.Value
+
+		st, err := s.store.Get(sessionid)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		if time.Now().After(st.Expiry) {
+			s.store.Delete(sessionid)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		r.Header.Set(middlewareToken, cookie.Value)
+		next.ServeHTTP(w, r)
+	}
+}
+
 func (s *ServerContext) overviewHandler(w http.ResponseWriter, r *http.Request) {
 	var (
-		sessionid string
-		page      templ.Component
+		page templ.Component
 	)
 
-	cookie, err := r.Cookie(sessionCookieName)
-	if err != nil || cookie.Value == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	sessionid = cookie.Value
-
-	st, err := s.store.Get(sessionid)
+	st, err := s.store.Get(w.Header().Get(middlewareToken))
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	// Check if session has expired
-	if time.Now().After(st.Expiry) {
-		s.store.Delete(sessionid)
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -216,8 +240,7 @@ func main() {
 
 	// pages
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
-	mux.HandleFunc("GET /overview", sctx.overviewHandler)
-
+	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewHandler))
 	mux.Handle("GET /static/", http.FileServerFS(staticFs))
 
 	log.Println("server listening on http://localhost:42069")
