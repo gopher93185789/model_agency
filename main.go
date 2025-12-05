@@ -26,6 +26,24 @@ const sessionCookieName string = "duke_dennis"
 const sessionExp = 6 * time.Hour
 const middlewareToken = "token"
 
+type ServerContext struct {
+	database *pgxpool.Pool
+	store    *sessionStore
+}
+
+func NewServerContext(database *pgxpool.Pool) *ServerContext {
+	return &ServerContext{
+		database: database,
+		store: &sessionStore{
+			mu:    sync.RWMutex{},
+			users: make(map[string]storePayload),
+		},
+	}
+}
+
+/*****************************************************
+ *                  SESSION STORE                    *
+ *****************************************************/
 type storePayload struct {
 	UserId     uuid.UUID
 	Role       string
@@ -62,12 +80,9 @@ func (s *sessionStore) Delete(key string) {
 	s.mu.Unlock()
 }
 
-type ServerContext struct {
-	database *pgxpool.Pool
-	tokenKey []byte
-	store    *sessionStore
-}
-
+/***********************************************
+ *                  HELPERS                    *
+ ***********************************************/
 func respondWithJson[P any](w http.ResponseWriter, code int, payload P) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
@@ -82,8 +97,51 @@ func hashPassword(password string) (hash []byte, err error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
-// not allowed to signup as docent because we will manully protmote them
+/**************************************************
+ *                  MIDDLEWARE                    *
+ **************************************************/
+/*
+# to get user info easy for lazy nihg:
 
+	info, err := s.store.Get(w.Header().Get(middlewareToken))
+	if err != nil {
+		return
+	}
+*/
+func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var (
+			sessionid string
+		)
+
+		cookie, err := r.Cookie(sessionCookieName)
+		if err != nil || cookie.Value == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		sessionid = cookie.Value
+
+		st, err := s.store.Get(sessionid)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		if time.Now().After(st.Expiry) {
+			s.store.Delete(sessionid)
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		r.Header.Set(middlewareToken, cookie.Value)
+		next.ServeHTTP(w, r)
+	}
+}
+
+/********************************************
+ *                  AUTH                    *
+ ********************************************/
+// not allowed to signup as docent because we will manully protmote them
 func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -117,7 +175,6 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
 	// email van opdracht gever:
 	// goede vraag! nee ik bedoel inderdaad dat de docent, de aanvraag van het model moet goedkeuren.
 	if role == "fotograaf" {
@@ -138,7 +195,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 
 	query := `
 		WITH user_i AS (
-			INSERT INTO "user" (role, school_id, name, password_hash) 
+			INSERT INTO app_users (role, school_id, name, password_hash) 
 			VALUES ($1, $2, $3, $4) 
 			RETURNING id
 		),
@@ -197,7 +254,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		role         string
 		query        = `
 		SELECT id, password_hash, role 
-		FROM user 
+		FROM app_users 
 		WHERE school_id=$1 
 		`
 	)
@@ -249,44 +306,20 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/overview", http.StatusSeeOther)
 }
 
-/*
-# to get user info easy for lazy nihg:
-
-	info, err := s.store.Get(w.Header().Get(middlewareToken))
-	if err != nil {
-		return
-	}
-*/
-func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			sessionid string
-		)
-
-		cookie, err := r.Cookie(sessionCookieName)
-		if err != nil || cookie.Value == "" {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		sessionid = cookie.Value
-
-		st, err := s.store.Get(sessionid)
-		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		if time.Now().After(st.Expiry) {
-			s.store.Delete(sessionid)
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		r.Header.Set(middlewareToken, cookie.Value)
-		next.ServeHTTP(w, r)
-	}
+func (s *ServerContext) Logout(w http.ResponseWriter, r *http.Request) {
+	s.store.Delete(middlewareToken)
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionCookieName,
+		Value:    "",
+		MaxAge:   -1,
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 }
 
+/*********************************************
+ *                  PAGES                    *
+ *********************************************/
 func (s *ServerContext) overviewHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		page templ.Component
@@ -313,6 +346,9 @@ func (s *ServerContext) overviewHandler(w http.ResponseWriter, r *http.Request) 
 	root(page).Render(r.Context(), w)
 }
 
+/*********************************************
+ *                  ENTRY                    *
+ *********************************************/
 func main() {
 	mux := http.NewServeMux()
 
@@ -321,6 +357,7 @@ func main() {
 	// api
 	mux.HandleFunc("POST /api/login", sctx.Login)
 	mux.HandleFunc("POST /api/signup", sctx.Signup)
+	mux.HandleFunc("POST /api/logout", sctx.AuthMiddleware(sctx.Logout))
 
 	// pages
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
