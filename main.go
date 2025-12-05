@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"crypto/subtle"
+	"embed"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -18,12 +19,17 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:embed static/**
+var staticFs embed.FS
+
 const sessionCookieName string = "duke_dennis"
+const sessionExp = 6 * time.Hour
 
 type storePayload struct {
-	UserId uuid.UUID
-	Role   string
-	Expiry time.Time
+	UserId     uuid.UUID
+	Role       string
+	Expiry     time.Time
+	ProfileUrl string
 }
 
 type ErrResponse struct {
@@ -140,7 +146,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sid := hex.EncodeToString(buf)
-	exp := time.Now().Add(6 * time.Hour)
+	exp := time.Now().Add(sessionExp)
 
 	s.store.Set(sid, storePayload{
 		UserId: id,
@@ -212,6 +218,9 @@ func main() {
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
 	mux.HandleFunc("GET /overview", sctx.overviewHandler)
 
+	mux.Handle("GET /static/", http.FileServerFS(staticFs))
+
+	log.Println("server listening on http://localhost:42069")
 	err := http.ListenAndServe(":42069", mux)
 	if err != nil {
 		log.Fatalf("failed to start server: %v", err)
