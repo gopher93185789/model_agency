@@ -37,3 +37,9 @@ model_agency
 # OS
 .DS_Store
 Thumbs.db
+
+
+
+*_templ.go
+package.json
+package-lock.json
