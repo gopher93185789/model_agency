@@ -81,6 +81,7 @@ type ServerContext struct {
 	tokenKey []byte
 	store    *sessionStore
 }
+
 type loginRequest struct {
 	StuNum   string
 	Password string
@@ -90,6 +91,8 @@ type loginRequest struct {
 func hashPassword(password string) (hash []byte, err error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
+
+
 
 func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
@@ -163,7 +166,10 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteNoneMode,
 	})
 
-	respondWithJson(w, http.StatusOK, map[string]string{"message": "login successful", "role": info.Role})
+	respondWithJson(w, http.StatusOK, struct {
+		Message string `json:"message"`
+		Role string `json:"role"`
+	}{Message: "login successful", Role: info.Role})
 }
 
 /*
