@@ -7,8 +7,10 @@ CREATE TABLE IF NOT EXISTS app_users (
     role role NOT NULL,
     school_id VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(50) NOT NULL,
-    password_hash TEXT
+    password_hash BYTEA
 );
+
+CREATE INDEX IF NOT EXISTS ON app_users(school_id);
 
 CREATE TABLE IF NOT EXISTS profile (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

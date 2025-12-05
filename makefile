@@ -28,3 +28,11 @@ deps:
 clean:
 	@rm -rf node_modules
 	@rm -f
+
+escape: 
+	@go build -gcflags "-m" . > escape.txt 2>&1
+	@grep -i 'escapes to heap' escape.txt > escapes.txt
+	@rm -f escape.txt model_agency
+asm: 
+	@go build -gcflags "-S" . > main.asm 2>&1
+	@rm -f model_agency
