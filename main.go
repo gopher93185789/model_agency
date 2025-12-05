@@ -33,10 +33,6 @@ type storePayload struct {
 	ProfileUrl string
 }
 
-type ErrResponse struct {
-	Error string `json:"error"`
-}
-
 type sessionStore struct {
 	mu    sync.RWMutex
 	users map[string]storePayload
@@ -66,6 +62,12 @@ func (s *sessionStore) Delete(key string) {
 	s.mu.Unlock()
 }
 
+type ServerContext struct {
+	database *pgxpool.Pool
+	tokenKey []byte
+	store    *sessionStore
+}
+
 func respondWithJson[P any](w http.ResponseWriter, code int, payload P) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
@@ -76,69 +78,146 @@ func respondWithJson[P any](w http.ResponseWriter, code int, payload P) {
 	}
 }
 
-type ServerContext struct {
-	database *pgxpool.Pool
-	tokenKey []byte
-	store    *sessionStore
-}
-
-type loginRequest struct {
-	StuNum   string
-	Password string
-	Role     string
-}
-
 func hashPassword(password string) (hash []byte, err error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
+// not allowed to signup as docent because we will manully protmote them
 
+func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	if err := r.ParseMultipartForm(3e+7); err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	var (
+		schoolId        = r.FormValue("school_id")
+		name            = r.FormValue("name")
+		password        = r.FormValue("password")
+		role            = r.FormValue("role")
+		hasFile         = false
+		profileImageUrl = ""
+		approved        = false
+	)
+	// imageFile, head, err := r.FormFile("profile_image")
+	// if err == nil {
+	// 	hasFile = true
+	// }
+	// defer imageFile.Close()
+
+	if schoolId == "" || name == "" || password == "" || role == "" {
+		http.Error(w, "School ID, name, password, and role are required", http.StatusBadRequest)
+		return
+	}
+
+	if role != "model" && role != "fotograaf" {
+		http.Error(w, "Role must be one of: model, fotograaf", http.StatusBadRequest)
+		return
+	}
+
+
+	// email van opdracht gever:
+	// goede vraag! nee ik bedoel inderdaad dat de docent, de aanvraag van het model moet goedkeuren.
+	if role == "fotograaf" {
+		approved = true
+	}
+
+	passwordHash, err := hashPassword(password)
+	if err != nil {
+		log.Printf("Password hashing failed: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	// parse and uplad to r2 then reytn url
+	if hasFile {
+		// uplaod
+	}
+
+	query := `
+		WITH user_i AS (
+			INSERT INTO "user" (role, school_id, name, password_hash) 
+			VALUES ($1, $2, $3, $4) 
+			RETURNING id
+		),
+		profile_i AS (
+			INSERT INTO profile (user_id, approved, profile_image_url) 
+			SELECT id, $5, $6
+			FROM user_i
+			RETURNING id
+		)
+	`
+
+	_, err = s.database.Exec(ctx, query,
+		role,
+		schoolId,
+		name,
+		string(passwordHash),
+		approved,
+		profileImageUrl,
+	)
+
+	if err != nil {
+		log.Printf("Database insert failed: %v", err)
+		if err.Error() == "duplicate key value violates unique constraint" {
+			http.Error(w, "Someone with that school ID already exists", http.StatusConflict)
+			return
+		}
+
+		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		return
+	}
+
+	// maybe we can redirect oto home with a queryparam modal
+	// that if not empty can show a modal popup sayting  "waiting for a docent to approve your profile" fr better UX
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
 
 func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var info loginRequest
-	if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
-		respondWithJson(w, http.StatusUnprocessableEntity, ErrResponse{Error: "failed to decode json"})
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
 	}
 
-	if info.StuNum == "" || info.Password == "" {
-		respondWithJson(w, http.StatusBadRequest, ErrResponse{Error: "student number and password are required"})
-		return
-	}
+	stuNum := r.FormValue("stunum")
+	password := r.FormValue("password")
 
-	if info.Role != "fotograaf" && info.Role != "model" && info.Role != "docent" {
-		respondWithJson(w, http.StatusBadRequest, ErrResponse{Error: "invalid role specified"})
+	if stuNum == "" || password == "" {
+		http.Error(w, "Student number and password are required", http.StatusBadRequest)
 		return
 	}
 
 	var (
 		id           uuid.UUID
 		passwordHash string
+		role         string
 		query        = `
-		SELECT id, password_hash 
+		SELECT id, password_hash, role 
 		FROM user 
 		WHERE school_id=$1 
-		AND role=$2
 		`
 	)
 
-	err := s.database.QueryRow(ctx, query, info.StuNum, info.Role).Scan(&id, &passwordHash)
+	err := s.database.QueryRow(ctx, query, stuNum).Scan(&id, &passwordHash, &role)
 	if err != nil {
 		log.Printf("Database query failed: %v", err)
-		respondWithJson(w, http.StatusUnauthorized, ErrResponse{Error: "invalid credentials"})
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	oldP, err := hashPassword(info.Password)
+	oldP, err := hashPassword(password)
 	if err != nil {
 		log.Printf("Password hashing failed: %v", err)
-		respondWithJson(w, http.StatusInternalServerError, ErrResponse{Error: "internal server error"})
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	if ok := subtle.ConstantTimeCompare(oldP, []byte(passwordHash)); ok == 0 {
-		respondWithJson(w, http.StatusUnauthorized, ErrResponse{Error: "invalid credentials"})
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
@@ -146,7 +225,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	_, err = rand.Read(buf)
 	if err != nil {
 		log.Printf("Failed to generate session ID: %v", err)
-		respondWithJson(w, http.StatusInternalServerError, ErrResponse{Error: "internal server error"})
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 	sid := hex.EncodeToString(buf)
@@ -154,7 +233,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 
 	s.store.Set(sid, storePayload{
 		UserId: id,
-		Role:   info.Role,
+		Role:   role,
 		Expiry: exp,
 	})
 
@@ -166,10 +245,8 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteNoneMode,
 	})
 
-	respondWithJson(w, http.StatusOK, struct {
-		Message string `json:"message"`
-		Role string `json:"role"`
-	}{Message: "login successful", Role: info.Role})
+	// Redirect to overview page on successful login
+	http.Redirect(w, r, "/overview", http.StatusSeeOther)
 }
 
 /*
@@ -243,6 +320,7 @@ func main() {
 
 	// api
 	mux.HandleFunc("POST /api/login", sctx.Login)
+	mux.HandleFunc("POST /api/signup", sctx.Signup)
 
 	// pages
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })

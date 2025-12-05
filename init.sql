@@ -6,8 +6,7 @@ CREATE TABLE IF NOT EXISTS user (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role role NOT NULL,
     school_id VARCHAR(50) UNIQUE NOT NULL,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50),
+    name VARCHAR(50) NOT NULL,
     password_hash TEXT
 );
 
@@ -15,6 +14,7 @@ CREATE TABLE IF NOT EXISTS profile (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES user(id) ON DELETE CASCADE,
     approved BOOLEAN DEFAULT false,
+    profile_image_url TEXT,
     description TEXT
 );
 
