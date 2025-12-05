@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"sync"
@@ -362,7 +363,8 @@ func main() {
 	// pages
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
 	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewHandler))
-	mux.Handle("GET /static/", http.FileServerFS(staticFs))
+	staticSubFS, _ := fs.Sub(staticFs, "static")
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticSubFS)))
 
 	log.Println("server listening on http://localhost:42069")
 	err := http.ListenAndServe(":42069", mux)
