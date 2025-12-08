@@ -1,0 +1,16 @@
+package pages
+
+templ Signup() {
+    <form method="POST" action="/api/signup" class="flex flex-col gap-4 w-80 mx-auto mt-20">
+        <h2 class="text-3xl font-bold text-center">Sign Up</h2>
+        <input type="text" name="school_id" placeholder="Student ID" required class="p-2 border border-gray-300 rounded">
+        <input type="text" name="name" placeholder="name" required class="p-2 border border-gray-300 rounded">
+        <input type="password" name="password" placeholder="Password" required class="p-2 border border-gray-300 rounded">
+        <select name="role" required class="p-2 border border-gray-300 rounded">
+            <option value="" disabled selected>Select Role</option>
+            <option value="fotograaf">Fotograaf</option>
+            <option value="model">Model</option>
+        </select>
+        <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Sign Up</button>
+    </form>
+}

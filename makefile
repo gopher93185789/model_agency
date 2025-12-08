@@ -22,6 +22,7 @@ gen:
 deps:
 	@echo "Installing templ..."
 	@go install github.com/a-h/templ/cmd/templ@latest
+	@go install github.com/air-verse/air@latest
 	@echo "Installing tailwind..."
 	@npm install tailwindcss @tailwindcss/cli
 

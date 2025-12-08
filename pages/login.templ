@@ -1,0 +1,10 @@
+package pages
+
+templ Login() {
+    <form method="POST" action="/api/login" class="flex flex-col gap-4 w-80 mx-auto mt-20">
+        <h2 class="text-3xl font-bold text-center text-white">Login</h2>
+        <input type="text" name="stunum" placeholder="Student Number" required class="p-2 border border-gray-300 rounded text-white">
+        <input type="password" name="password" placeholder="Password" required class="p-2 border border-gray-300 rounded text-white">
+        <button type="submit" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Login</button>
+    </form>
+}

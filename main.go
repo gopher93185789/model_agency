@@ -1,8 +1,8 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
-	"crypto/subtle"
 	"embed"
 	"encoding/hex"
 	"encoding/json"
@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -117,20 +118,20 @@ func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 
 		cookie, err := r.Cookie(sessionCookieName)
 		if err != nil || cookie.Value == "" {
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
 		sessionid = cookie.Value
 
 		st, err := s.store.Get(sessionid)
 		if err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
 
 		if time.Now().After(st.Expiry) {
 			s.store.Delete(sessionid)
-			w.WriteHeader(http.StatusUnauthorized)
+			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
 			return
 		}
 
@@ -146,10 +147,10 @@ func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if err := r.ParseMultipartForm(3e+7); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		return
-	}
+	// if err := r.ParseMultipartForm(3e+7); err != nil {
+	// 	http.Error(w, "Failed to parse form", http.StatusBadRequest)
+	// 	return
+	// }
 
 	var (
 		schoolId        = r.FormValue("school_id")
@@ -199,13 +200,11 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 			INSERT INTO app_users (role, school_id, name, password_hash) 
 			VALUES ($1, $2, $3, $4) 
 			RETURNING id
-		),
-		profile_i AS (
+		)
 			INSERT INTO profile (user_id, approved, profile_image_url) 
 			SELECT id, $5, $6
 			FROM user_i
 			RETURNING id
-		)
 	`
 
 	_, err = s.database.Exec(ctx, query,
@@ -251,7 +250,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 
 	var (
 		id           uuid.UUID
-		passwordHash string
+		passwordHash []byte
 		role         string
 		query        = `
 		SELECT id, password_hash, role 
@@ -267,14 +266,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oldP, err := hashPassword(password)
-	if err != nil {
-		log.Printf("Password hashing failed: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	if ok := subtle.ConstantTimeCompare(oldP, []byte(passwordHash)); ok == 0 {
+	if err := bcrypt.CompareHashAndPassword(passwordHash, []byte(password)); err != nil {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
@@ -300,6 +292,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		Value:    sid,
 		Expires:  exp,
 		HttpOnly: true,
+		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	})
 
@@ -352,9 +345,11 @@ func (s *ServerContext) overviewHandler(w http.ResponseWriter, r *http.Request) 
  *********************************************/
 func main() {
 	mux := http.NewServeMux()
-
-	sctx := &ServerContext{}
-
+	conn, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+	if err != nil {
+		panic(err)
+	}
+	sctx := NewServerContext(conn)
 	// api
 	mux.HandleFunc("POST /api/login", sctx.Login)
 	mux.HandleFunc("POST /api/signup", sctx.Signup)
@@ -366,8 +361,12 @@ func main() {
 	staticSubFS, _ := fs.Sub(staticFs, "static")
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticSubFS)))
 
+	// auth pages
+	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) { root(pages.Login()).Render(r.Context(), w) })
+	mux.HandleFunc("GET /signup", func(w http.ResponseWriter, r *http.Request) { root(pages.Signup()).Render(r.Context(), w) })
+
 	log.Println("server listening on http://localhost:42069")
-	err := http.ListenAndServe(":42069", mux)
+	err = http.ListenAndServe(":42069", mux)
 	if err != nil {
 		log.Fatalf("failed to start server: %v", err)
 	}
