@@ -1,4 +1,4 @@
-TAILWIND = npx @tailwindcss/cli
+TAILWIND = npx @tailwindcss/cli --watch
 TAILWIND_INPUT = ./globals.css
 TAILWIND_OUTPUT = ./static/dist.css
 

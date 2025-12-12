@@ -1,16 +1,58 @@
 package pages
 
+import "github.com/gopher93185789/model_agency/components"
+
 templ Signup() {
-    <form method="POST" action="/api/signup" class="flex flex-col gap-4 w-80 mx-auto mt-20">
-        <h2 class="text-3xl font-bold text-center">Sign Up</h2>
-        <input type="text" name="school_id" placeholder="Student ID" required class="p-2 border border-gray-300 rounded">
-        <input type="text" name="name" placeholder="name" required class="p-2 border border-gray-300 rounded">
-        <input type="password" name="password" placeholder="Password" required class="p-2 border border-gray-300 rounded">
-        <select name="role" required class="p-2 border border-gray-300 rounded">
-            <option value="" disabled selected>Select Role</option>
-            <option value="fotograaf">Fotograaf</option>
-            <option value="model">Model</option>
-        </select>
-        <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Sign Up</button>
-    </form>
+	<div class="w-full min-h-screen flex flex-col items-center justify-center p-5">
+		<form method="POST" action="/api/signup" enctype="multipart/form-data" class="flex flex-col gap-6 w-full max-w-md">
+			<h2 class="text-4xl font-bold text-text uppercase tracking-tight mb-8 text-center">Join Our Agency</h2>
+			<div class="flex flex-col gap-2">
+				<label class="text-sm text-text-muted uppercase tracking-wide">Student ID</label>
+				<input
+					type="text"
+					name="school_id"
+					placeholder="Enter your student ID"
+					required
+					class="px-4 py-3 bg-bg-light border border-border rounded-sm text-text placeholder:text-text-muted-extra focus:outline-none focus:border-accent transition-colors duration-200"
+				/>
+			</div>
+			<div class="flex flex-col gap-2">
+				<label class="text-sm text-text-muted uppercase tracking-wide">Name</label>
+				<input
+					type="text"
+					name="name"
+					placeholder="Enter your name"
+					required
+					class="px-4 py-3 bg-bg-light border border-border rounded-sm text-text placeholder:text-text-muted-extra focus:outline-none focus:border-accent transition-colors duration-200"
+				/>
+			</div>
+			<div class="flex flex-col gap-2">
+				<label class="text-sm text-text-muted uppercase tracking-wide">Password</label>
+				<input
+					type="password"
+					name="password"
+					placeholder="Enter your password"
+					required
+					class="px-4 py-3 bg-bg-light border border-border rounded-sm text-text placeholder:text-text-muted-extra focus:outline-none focus:border-accent transition-colors duration-200"
+				/>
+			</div>
+			<div class="flex flex-col gap-2">
+				<label class="text-sm text-text-muted uppercase tracking-wide">Role</label>
+				<select
+					name="role"
+					required
+					class="px-4 py-3 bg-bg-light border border-border rounded-sm text-text focus:outline-none focus:border-accent transition-colors duration-200 cursor-pointer"
+				>
+					<option value="" disabled selected class="text-text-muted-extra">Select your role</option>
+					<option value="fotograaf" class="bg-bg-light text-text">Fotograaf</option>
+					<option value="model" class="bg-bg-light text-text">Model</option>
+				</select>
+			</div>
+			@components.SubmitButton("Begin Your Journey")
+			<p class="text-center text-sm text-text-muted mt-4">
+				Already have an account? 
+				<a href="/login" class="text-accent hover:text-accent-hover underline transition-colors duration-200">Login</a>
+			</p>
+		</form>
+	</div>
 }

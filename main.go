@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -144,13 +145,14 @@ func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
  *                  AUTH                    *
  ********************************************/
 // not allowed to signup as docent because we will manully protmote them
+// to make the html form work change enc type to multipart
 func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	// if err := r.ParseMultipartForm(3e+7); err != nil {
-	// 	http.Error(w, "Failed to parse form", http.StatusBadRequest)
-	// 	return
-	// }
+	if err := r.ParseMultipartForm(3e+7); err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
 
 	var (
 		schoolId        = r.FormValue("school_id")
@@ -177,8 +179,6 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// email van opdracht gever:
-	// goede vraag! nee ik bedoel inderdaad dat de docent, de aanvraag van het model moet goedkeuren.
 	if role == "fotograaf" {
 		approved = true
 	}
@@ -201,10 +201,10 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 			VALUES ($1, $2, $3, $4) 
 			RETURNING id
 		)
-			INSERT INTO profile (user_id, approved, profile_image_url) 
-			SELECT id, $5, $6
-			FROM user_i
-			RETURNING id
+		INSERT INTO profile (user_id, approved, profile_image_url) 
+		SELECT id, $5, $6
+		FROM user_i
+		RETURNING id
 	`
 
 	_, err = s.database.Exec(ctx, query,
@@ -229,7 +229,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 
 	// maybe we can redirect oto home with a queryparam modal
 	// that if not empty can show a modal popup sayting  "waiting for a docent to approve your profile" fr better UX
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/overview", http.StatusPermanentRedirect)
 }
 
 func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
@@ -240,7 +240,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stuNum := r.FormValue("stunum")
+	stuNum := r.FormValue("school_id")
 	password := r.FormValue("password")
 
 	if stuNum == "" || password == "" {
@@ -261,6 +261,11 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 
 	err := s.database.QueryRow(ctx, query, stuNum).Scan(&id, &passwordHash, &role)
 	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			http.Redirect(w, r, "/signup", http.StatusPermanentRedirect)
+			return
+		}
+
 		log.Printf("Database query failed: %v", err)
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
@@ -297,7 +302,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Redirect to overview page on successful login
-	http.Redirect(w, r, "/overview", http.StatusSeeOther)
+	http.Redirect(w, r, "/overview", http.StatusPermanentRedirect)
 }
 
 func (s *ServerContext) Logout(w http.ResponseWriter, r *http.Request) {

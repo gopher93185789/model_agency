@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"math/rand"
+	"mime/multipart"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,11 +19,11 @@ import (
 )
 
 const (
-	dbUser         = "testAdmin"
-	dbPassword     = "pass1234"
-	dbName         = "testdb"
-	containerPort  = "5432"
-	imageName      = "postgres:15"
+	dbUser        = "testAdmin"
+	dbPassword    = "pass1234"
+	dbName        = "testdb"
+	containerPort = "5432"
+	imageName     = "postgres:15"
 )
 
 var MOCK_SERVER *ServerContext
@@ -105,7 +110,57 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestLogin(t *testing.T)    {}
-func TestSignup(t *testing.T)   {}
-func TestLogout(t *testing.T)   {}
-func TestOverview(t *testing.T) {}
+func TestAuth(t *testing.T) {
+	t.Run("signup", func(t *testing.T) {
+		var buf bytes.Buffer
+		writer := multipart.NewWriter(&buf)
+
+		writer.WriteField("school_id", "102717")
+		writer.WriteField("name", "Leon van Snoeptomaat")
+		writer.WriteField("password", "HEllo@3948")
+		writer.WriteField("role", "fotograaf")
+		writer.Close()
+
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodPost, "/api/signup", &buf)
+		r.Header.Set("Content-Type", writer.FormDataContentType())
+
+		start := time.Now()
+		MOCK_SERVER.Signup(w, r)
+		fmt.Println("Signup:", time.Since(start))
+
+		if w.Code != http.StatusPermanentRedirect {
+			t.Error("failed to redirect user")
+		}
+
+		var exists bool
+		err := MOCK_SERVER.database.QueryRow(t.Context(), "SELECT EXISTS(SELECT id FROM app_users WHERE school_id = $1)", "102717").Scan(&exists)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !exists {
+			t.Error("faield to add user to db")
+		}
+	})
+
+	t.Run("login", func(t *testing.T) {
+		writer := url.Values{}
+		writer.Set("school_id", "102717")
+		writer.Set("password", "HEllo@3948")
+
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader(writer.Encode()))
+		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		start := time.Now()
+		MOCK_SERVER.Login(w, r)
+		fmt.Println("Login:", time.Since(start))
+
+		if w.Code != http.StatusPermanentRedirect {
+			t.Fatalf("failed to redirect user: %d - %v", w.Code, w.Body.String())
+		}
+
+	})
+
+}
