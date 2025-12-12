@@ -19,6 +19,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gopher93185789/model_agency/pages"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/patrickmn/go-cache"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,11 +33,13 @@ const middlewareToken = "token"
 type ServerContext struct {
 	database *pgxpool.Pool
 	store    *sessionStore
+	cache    *cache.Cache
 }
 
 func NewServerContext(database *pgxpool.Pool) *ServerContext {
 	return &ServerContext{
 		database: database,
+		cache:    cache.New(5*time.Minute, 1*time.Minute),
 		store: &sessionStore{
 			mu:    sync.RWMutex{},
 			users: make(map[string]storePayload),
@@ -330,7 +333,16 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 		page templ.Component
 	)
 
-	st, err := s.store.Get(r.Header.Get(middlewareToken))
+	sid := r.Header.Get(middlewareToken)
+	p, ok := s.cache.Get(sid)
+	if ok {
+		if v, ok := p.(templ.Component); ok {
+			root(v).Render(r.Context(), w)
+			return
+		}
+	}
+
+	st, err := s.store.Get(sid)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -338,17 +350,51 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 
 	switch st.Role {
 	case "docent":
+		s.cache.Set(sid, page, cache.DefaultExpiration)
 		page = pages.Docent()
 	case "model":
-		page = pages.Model()
+		s.cache.Set(sid, page, cache.DefaultExpiration)
+		modelData := pages.ModelData{
+			Name:        "Alex Morgan",
+			TotalShoots: 24,
+			Email:       "alex.morgan@email.com",
+			Location:    "New York, NY",
+			Bio:         "Professional model with 5+ years of experience in fashion, editorial, and commercial photography. Available for studio and outdoor shoots. Portfolio available upon request.",
+			Portfolio:   []string{"", "", "", "", "", ""},
+			Measurements: pages.Measurements{
+				Height: "167",
+				Bust:   "34",
+				Waist:  "24",
+				Hips:   "36",
+			},
+			Editable: true,
+		}
+		page = pages.Model(modelData)
 	case "fotograaf":
-		page = pages.Fotograaf()
+		s.cache.Set(sid, page, cache.DefaultExpiration)
+		modelData := pages.ModelData{
+			Name:        "Alex Morgan",
+			TotalShoots: 24,
+			Email:       "alex.morgan@email.com",
+			Location:    "New York, NY",
+			Bio:         "Professional model with 5+ years of experience in fashion, editorial, and commercial photography. Available for studio and outdoor shoots. Portfolio available upon request.",
+			Portfolio:   []string{"", "", "", "", "", ""},
+			Measurements: pages.Measurements{
+				Height: "167",
+				Bust:   "34",
+				Waist:  "24",
+				Hips:   "36",
+			},
+			Editable: false,
+		}
+		page = pages.ModelPublic(modelData)
 	default:
 		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		return
 	}
 
 	root(page).Render(r.Context(), w)
+
 }
 
 func (s *ServerContext) LoginPage(w http.ResponseWriter, r *http.Request) {
