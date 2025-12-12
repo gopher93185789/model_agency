@@ -350,10 +350,9 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 
 	switch st.Role {
 	case "docent":
-		s.cache.Set(sid, page, cache.DefaultExpiration)
 		page = pages.Docent()
-	case "model":
 		s.cache.Set(sid, page, cache.DefaultExpiration)
+	case "model":
 		modelData := pages.ModelData{
 			Name:        "Alex Morgan",
 			TotalShoots: 24,
@@ -370,24 +369,10 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 			Editable: true,
 		}
 		page = pages.Model(modelData)
-	case "fotograaf":
 		s.cache.Set(sid, page, cache.DefaultExpiration)
-		modelData := pages.ModelData{
-			Name:        "Alex Morgan",
-			TotalShoots: 24,
-			Email:       "alex.morgan@email.com",
-			Location:    "New York, NY",
-			Bio:         "Professional model with 5+ years of experience in fashion, editorial, and commercial photography. Available for studio and outdoor shoots. Portfolio available upon request.",
-			Portfolio:   []string{"", "", "", "", "", ""},
-			Measurements: pages.Measurements{
-				Height: "167",
-				Bust:   "34",
-				Waist:  "24",
-				Hips:   "36",
-			},
-			Editable: false,
-		}
-		page = pages.ModelPublic(modelData)
+	case "fotograaf":
+		page = pages.Fotograaf()
+		s.cache.Set(sid, page, cache.DefaultExpiration)
 	default:
 		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		return
