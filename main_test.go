@@ -129,7 +129,7 @@ func TestAuth(t *testing.T) {
 		MOCK_SERVER.Signup(w, r)
 		fmt.Println("Signup:", time.Since(start))
 
-		if w.Code != http.StatusPermanentRedirect {
+		if w.Code != http.StatusSeeOther {
 			t.Error("failed to redirect user")
 		}
 
@@ -157,7 +157,7 @@ func TestAuth(t *testing.T) {
 		MOCK_SERVER.Login(w, r)
 		fmt.Println("Login:", time.Since(start))
 
-		if w.Code != http.StatusPermanentRedirect {
+		if w.Code != http.StatusSeeOther {
 			t.Fatalf("failed to redirect user: %d - %v", w.Code, w.Body.String())
 		}
 

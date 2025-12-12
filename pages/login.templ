@@ -4,13 +4,13 @@ import "github.com/gopher93185789/model_agency/components"
 
 templ Login() {
 	<div class="w-full min-h-screen flex flex-col items-center justify-center p-5">
-		<form method="POST" action="/api/login" class="flex flex-col gap-6 w-full max-w-md">
+		<form method="POST" action="/api/login" enctype="application/x-www-form-urlencoded" class="flex flex-col gap-6 w-full max-w-md">
 			<h2 class="text-4xl font-bold text-text uppercase tracking-tight mb-8 text-center">Welcome Back</h2>
 			<div class="flex flex-col gap-2">
 				<label class="text-sm text-text-muted uppercase tracking-wide">Student Number</label>
 				<input
 					type="text"
-					name="stunum"
+					name="school_id"
 					placeholder="Enter your student number"
 					required
 					class="px-4 py-3 bg-bg-light border border-border rounded-sm text-text placeholder:text-text-muted-extra focus:outline-none focus:border-accent transition-colors duration-200"

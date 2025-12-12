@@ -100,43 +100,47 @@ func hashPassword(password string) (hash []byte, err error) {
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
+func (s *ServerContext) validateSession(r *http.Request) (string, bool) {
+	cookie, err := r.Cookie(sessionCookieName)
+	if err != nil || cookie.Value == "" {
+		return "", false
+	}
+	sessionid := cookie.Value
+
+	st, err := s.store.Get(sessionid)
+	if err != nil {
+		return "", false
+
+	}
+
+	if time.Now().After(st.Expiry) {
+		s.store.Delete(sessionid)
+		return "", false
+	}
+
+	return sessionid, true
+}
+
 /**************************************************
  *                  MIDDLEWARE                    *
  **************************************************/
 /*
 # to get user info easy for lazy nihg:
-
-	info, err := s.store.Get(w.Header().Get(middlewareToken))
+	st, err := s.store.Get(r.Header.Get(middlewareToken))
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 */
 func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var (
-			sessionid string
-		)
-
-		cookie, err := r.Cookie(sessionCookieName)
-		if err != nil || cookie.Value == "" {
-			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-			return
-		}
-		sessionid = cookie.Value
-
-		st, err := s.store.Get(sessionid)
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
+		sessionid, ok := s.validateSession(r)
+		if !ok {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
-		if time.Now().After(st.Expiry) {
-			s.store.Delete(sessionid)
-			http.Redirect(w, r, "/login", http.StatusPermanentRedirect)
-			return
-		}
-
-		r.Header.Set(middlewareToken, cookie.Value)
+		r.Header.Set(middlewareToken, sessionid)
 		next.ServeHTTP(w, r)
 	}
 }
@@ -229,12 +233,11 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 
 	// maybe we can redirect oto home with a queryparam modal
 	// that if not empty can show a modal popup sayting  "waiting for a docent to approve your profile" fr better UX
-	http.Redirect(w, r, "/overview", http.StatusPermanentRedirect)
+	http.Redirect(w, r, "/overview", http.StatusSeeOther)
 }
 
 func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
@@ -298,11 +301,12 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		Expires:  exp,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	// Redirect to overview page on successful login
-	http.Redirect(w, r, "/overview", http.StatusPermanentRedirect)
+	http.Redirect(w, r, "/overview", http.StatusSeeOther)
 }
 
 func (s *ServerContext) Logout(w http.ResponseWriter, r *http.Request) {
@@ -314,17 +318,19 @@ func (s *ServerContext) Logout(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
 	})
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 /*********************************************
  *                  PAGES                    *
  *********************************************/
-func (s *ServerContext) overviewHandler(w http.ResponseWriter, r *http.Request) {
+func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 	var (
 		page templ.Component
 	)
 
-	st, err := s.store.Get(w.Header().Get(middlewareToken))
+	st, err := s.store.Get(r.Header.Get(middlewareToken))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -345,6 +351,25 @@ func (s *ServerContext) overviewHandler(w http.ResponseWriter, r *http.Request) 
 	root(page).Render(r.Context(), w)
 }
 
+func (s *ServerContext) LoginPage(w http.ResponseWriter, r *http.Request) {
+	_, ok := s.validateSession(r)
+	if ok {
+		http.Redirect(w, r, "/overview", http.StatusSeeOther)
+		return
+	}
+
+	root(pages.Login()).Render(r.Context(), w)
+}
+func (s *ServerContext) SignupPage(w http.ResponseWriter, r *http.Request) {
+	_, ok := s.validateSession(r)
+	if ok {
+		http.Redirect(w, r, "/overview", http.StatusSeeOther)
+		return
+	}
+
+	root(pages.Signup()).Render(r.Context(), w)
+}
+
 /*********************************************
  *                  ENTRY                    *
  *********************************************/
@@ -355,20 +380,22 @@ func main() {
 		panic(err)
 	}
 	sctx := NewServerContext(conn)
+	// pages
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
+	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewPage))
+
+	staticSubFS, err := fs.Sub(staticFs, "static")
+	if err != nil {
+		log.Fatalf("failed to start server: %v\n", err)
+	}
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticSubFS)))
+	mux.HandleFunc("GET /login", sctx.LoginPage)
+	mux.HandleFunc("GET /signup", sctx.SignupPage)
+
 	// api
 	mux.HandleFunc("POST /api/login", sctx.Login)
 	mux.HandleFunc("POST /api/signup", sctx.Signup)
 	mux.HandleFunc("POST /api/logout", sctx.AuthMiddleware(sctx.Logout))
-
-	// pages
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
-	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewHandler))
-	staticSubFS, _ := fs.Sub(staticFs, "static")
-	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticSubFS)))
-
-	// auth pages
-	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) { root(pages.Login()).Render(r.Context(), w) })
-	mux.HandleFunc("GET /signup", func(w http.ResponseWriter, r *http.Request) { root(pages.Signup()).Render(r.Context(), w) })
 
 	log.Println("server listening on http://localhost:42069")
 	err = http.ListenAndServe(":42069", mux)

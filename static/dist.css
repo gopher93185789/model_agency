@@ -544,31 +544,17 @@
       color: var(--color-text-muted-extra);
     }
   }
-  .hover\:scale-\[1\.02\] {
+  .hover\:bg-blue-600 {
     &:hover {
       @media (hover: hover) {
-        scale: 1.02;
+        background-color: var(--color-blue-600);
       }
     }
   }
-  .hover\:border-accent-hover {
+  .hover\:bg-green-600 {
     &:hover {
       @media (hover: hover) {
-        border-color: var(--color-accent-hover);
-      }
-    }
-  }
-  .hover\:bg-accent {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-accent);
-      }
-    }
-  }
-  .hover\:bg-accent-hover {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-accent-hover);
+        background-color: var(--color-green-600);
       }
     }
   }
@@ -583,23 +569,6 @@
     &:hover {
       @media (hover: hover) {
         text-decoration-line: underline;
-      }
-    }
-  }
-  .hover\:opacity-80 {
-    &:hover {
-      @media (hover: hover) {
-        opacity: 80%;
-      }
-    }
-  }
-  .hover\:shadow-accent\/20 {
-    &:hover {
-      @media (hover: hover) {
-        --tw-shadow-color: color-mix(in srgb, #3b82f6 20%, transparent);
-        @supports (color: color-mix(in lab, red, red)) {
-          --tw-shadow-color: color-mix(in oklab, color-mix(in oklab, var(--color-accent) 20%, transparent) var(--tw-shadow-alpha), transparent);
-        }
       }
     }
   }
