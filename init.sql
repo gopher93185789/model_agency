@@ -6,13 +6,13 @@ CREATE TYPE role AS ENUM ('model', 'fotograaf', 'docent');
 CREATE TABLE IF NOT EXISTS app_users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     role role NOT NULL,
-    school_id VARCHAR(50) UNIQUE NOT NULL,
+    school_email VARCHAR(50) UNIQUE NOT NULL,
     name VARCHAR(50) NOT NULL,
     password_hash BYTEA
 );
 
-CREATE INDEX IF NOT EXISTS idx_app_users_school_id
-    ON app_users (school_id);
+CREATE INDEX IF NOT EXISTS idx_app_users_school_email
+    ON app_users (school_email);
 
 
 CREATE TABLE IF NOT EXISTS profile (

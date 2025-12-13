@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -164,7 +165,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		schoolId        = r.FormValue("school_id")
+		schoolEmail     = r.FormValue("school_email")
 		name            = r.FormValue("name")
 		password        = r.FormValue("password")
 		role            = r.FormValue("role")
@@ -178,8 +179,14 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	// }
 	// defer imageFile.Close()
 
-	if schoolId == "" || name == "" || password == "" || role == "" {
+	if schoolEmail == "" || name == "" || password == "" || role == "" {
 		http.Error(w, "School ID, name, password, and role are required", http.StatusBadRequest)
+		return
+	}
+
+	emailPattern := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@glr\.nl$`)
+	if !emailPattern.MatchString(schoolEmail) {
+		http.Error(w, "School email must be a valid email ending with @glr.nl", http.StatusBadRequest)
 		return
 	}
 
@@ -206,7 +213,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 
 	query := `
 		WITH user_i AS (
-			INSERT INTO app_users (role, school_id, name, password_hash) 
+			INSERT INTO app_users (role, school_email, name, password_hash) 
 			VALUES ($1, $2, $3, $4) 
 			RETURNING id
 		)
@@ -218,7 +225,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 
 	_, err = s.database.Exec(ctx, query,
 		role,
-		schoolId,
+		schoolEmail,
 		name,
 		string(passwordHash),
 		approved,
@@ -248,10 +255,10 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stuNum := r.FormValue("school_id")
+	schoolEmail := r.FormValue("school_email")
 	password := r.FormValue("password")
 
-	if stuNum == "" || password == "" {
+	if schoolEmail == "" || password == "" {
 		http.Error(w, "Student number and password are required", http.StatusBadRequest)
 		return
 	}
@@ -263,14 +270,14 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		query        = `
 		SELECT id, password_hash, role 
 		FROM app_users 
-		WHERE school_id=$1 
+		WHERE school_email=$1 
 		`
 	)
 
-	err := s.database.QueryRow(ctx, query, stuNum).Scan(&id, &passwordHash, &role)
+	err := s.database.QueryRow(ctx, query, schoolEmail).Scan(&id, &passwordHash, &role)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
-			http.Redirect(w, r, "/signup", http.StatusPermanentRedirect)
+			http.Redirect(w, r, "/signup", http.StatusSeeOther)
 			return
 		}
 

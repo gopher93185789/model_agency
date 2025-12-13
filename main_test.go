@@ -109,14 +109,18 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	os.Exit(code)
 }
+
 func TestAuth(t *testing.T) {
+	id := "102717@glr.nl"
+	password := "HEllo@3948"
+
 	t.Run("signup", func(t *testing.T) {
 		var buf bytes.Buffer
 		writer := multipart.NewWriter(&buf)
 
-		writer.WriteField("school_id", "102717")
+		writer.WriteField("school_email", id)
 		writer.WriteField("name", "Leon van Snoeptomaat")
-		writer.WriteField("password", "HEllo@3948")
+		writer.WriteField("password", password)
 		writer.WriteField("role", "fotograaf")
 		writer.Close()
 
@@ -133,7 +137,7 @@ func TestAuth(t *testing.T) {
 		}
 
 		var exists bool
-		err := MOCK_SERVER.database.QueryRow(t.Context(), "SELECT EXISTS(SELECT id FROM app_users WHERE school_id = $1)", "102717").Scan(&exists)
+		err := MOCK_SERVER.database.QueryRow(t.Context(), "SELECT EXISTS(SELECT id FROM app_users WHERE school_email = $1)", id).Scan(&exists)
 		if err != nil {
 			t.Error(err)
 		}
@@ -145,8 +149,8 @@ func TestAuth(t *testing.T) {
 
 	t.Run("login", func(t *testing.T) {
 		writer := url.Values{}
-		writer.Set("school_id", "102717")
-		writer.Set("password", "HEllo@3948")
+		writer.Set("school_email", id)
+		writer.Set("password", password)
 
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader(writer.Encode()))

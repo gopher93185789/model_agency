@@ -7,7 +7,7 @@ templ Login() {
 		@components.HomeIcon()
 		<form method="POST" action="/api/login" enctype="application/x-www-form-urlencoded" class="flex flex-col gap-6 w-full max-w-md">
 			<h2 class="text-4xl font-bold text-text uppercase tracking-tight mb-8 text-center">Welcome Back</h2>
-			@components.Input("Student Number", "text", "school_id", "Enter your student number", true)
+			@components.Input("School Email", "text", "school_email", "Enter your school email", true)
 			@components.Input("Password", "password", "password", "Enter your password", true)
 			@components.SubmitButton("Enter")
 			<p class="text-center text-sm text-text-muted mt-4">
