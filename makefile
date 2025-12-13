@@ -31,8 +31,10 @@ deps:
 	@npm install tailwindcss @tailwindcss/cli
 
 clean:
+	@echo "Cleaning generated files..."
+	@find . -name "*_templ.go" -type f -delete
 	@rm -rf node_modules
-	@rm -f
+	@rm -f model_agency
 
 escape: 
 	@go build -gcflags "-m" . > escape.txt 2>&1
