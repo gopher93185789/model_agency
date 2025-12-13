@@ -109,7 +109,6 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	os.Exit(code)
 }
-
 func TestAuth(t *testing.T) {
 	t.Run("signup", func(t *testing.T) {
 		var buf bytes.Buffer

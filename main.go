@@ -102,7 +102,7 @@ func respondWithJson[P any](w http.ResponseWriter, code int, payload P) {
 }
 
 func hashPassword(password string) (hash []byte, err error) {
-	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return bcrypt.GenerateFromPassword([]byte(password), 5)
 }
 
 func (s *ServerContext) validateSession(r *http.Request) (string, bool) {
@@ -370,7 +370,7 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 			},
 			Editable: true,
 		}
-		page = pages.Model(modelData)
+		page = pages.ModelPublic(modelData)
 		s.cache.Set(sid, page, cache.DefaultExpiration)
 	case "fotograaf":
 		page = pages.Fotograaf()

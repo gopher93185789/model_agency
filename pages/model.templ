@@ -27,7 +27,7 @@ templ Model(data ModelData) {
 			<!-- Profile Section -->
 			@components.Card("") {
 				<div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 md:gap-6">
-					@components.ProfilePicture()
+					@components.ProfilePicture("")
 					<div class="space-y-5">
 						@components.Field("Name", data.Name, data.Editable, "text")
 						<div class="bg-bg border border-border rounded-lg p-4">

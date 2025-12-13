@@ -8,8 +8,10 @@ templ ModelPublic(data ModelData) {
 		<div class="max-w-4xl mx-auto">
 			<!-- Profile Section -->
 			@components.Card("") {
-				<div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 md:gap-6">
-					@components.ProfilePicture()
+				<div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 md:gap-6 md:items-stretch">
+					<div class="h-full">
+						@components.ProfilePicture("")
+					</div>
 					<div class="space-y-5">
 						@components.Field("Name", data.Name, false, "text")
 						<div class="bg-bg border border-border rounded-lg p-4">
