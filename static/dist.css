@@ -323,9 +323,6 @@
   .min-h-\[100px\] {
     min-height: 100px;
   }
-  .min-h-\[120px\] {
-    min-height: 120px;
-  }
   .min-h-screen {
     min-height: 100vh;
   }
@@ -753,20 +750,6 @@
       color: var(--color-text-muted-extra);
     }
   }
-  .hover\:bg-blue-600 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-blue-600);
-      }
-    }
-  }
-  .hover\:bg-green-600 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-green-600);
-      }
-    }
-  }
   .hover\:text-accent-hover {
     &:hover {
       @media (hover: hover) {
@@ -816,11 +799,6 @@
   .md\:grid-cols-\[180px_1fr\] {
     @media (width >= 48rem) {
       grid-template-columns: 180px 1fr;
-    }
-  }
-  .md\:grid-cols-\[240px_1fr\] {
-    @media (width >= 48rem) {
-      grid-template-columns: 240px 1fr;
     }
   }
   .md\:gap-6 {

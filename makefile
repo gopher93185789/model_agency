@@ -17,7 +17,7 @@ css:
 	@$(TAILWIND) -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT)
 
 gen:
-	@$(TEMPL) generate
+	@$(TEMPL) generate --watch
 
 deps:
 	@echo "Installing templ..."

@@ -11,8 +11,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/a-h/templ"
@@ -406,7 +408,11 @@ func (s *ServerContext) SignupPage(w http.ResponseWriter, r *http.Request) {
  *********************************************/
 func main() {
 	mux := http.NewServeMux()
-	conn, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+	dsn := os.Getenv("DSN")
+	if dsn == "" {
+		log.Fatalln("DSN env var not set")
+	}
+	conn, err := pgxpool.New(context.Background(), dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -428,9 +434,22 @@ func main() {
 	mux.HandleFunc("POST /api/signup", sctx.Signup)
 	mux.HandleFunc("POST /api/logout", sctx.AuthMiddleware(sctx.Logout))
 
-	log.Println("server listening on http://localhost:42069")
-	err = http.ListenAndServe(":42069", mux)
+	srv := &http.Server{
+		Addr:    ":42069",
+		Handler: mux,
+	}
+
+	go func() {
+		log.Println("server listening on http://localhost:42069")
+		srv.ListenAndServe()
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGTERM, syscall.SIGABRT, os.Interrupt)
+	<-c
+	fmt.Println("\nmi ah go sleep big man...")
+	err = srv.Shutdown(context.TODO())
 	if err != nil {
-		log.Fatalf("failed to start server: %v", err)
+		log.Fatalln("meh cyant shut down da server ghee...")
 	}
 }
