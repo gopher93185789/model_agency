@@ -1,4 +1,4 @@
-TAILWIND = npx @tailwindcss/cli --watch
+TAILWIND = npx @tailwindcss/cli
 TAILWIND_INPUT = ./globals.css
 TAILWIND_OUTPUT = ./static/dist.css
 
@@ -7,14 +7,18 @@ GOFLAGS = -ldflags="-s -w" -trimpath
 
 .PHONY: run build deps css gen clean
 
-run: css gen
+run:
+	@$(TEMPL) generate
+	@$(TAILWIND) -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT)
 	@go run .
 
-build: css gen
+build: 
+	@$(TEMPL) generate
+	@$(TAILWIND) -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT)
 	@go build $(GOFLAGS) .
 
 css:
-	@$(TAILWIND) -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT)
+	@$(TAILWIND) --watch -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT)
 
 gen:
 	@$(TEMPL) generate --watch

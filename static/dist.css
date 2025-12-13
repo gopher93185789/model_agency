@@ -778,13 +778,6 @@
       color: var(--color-text-muted-extra);
     }
   }
-  .hover\:bg-accent {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-accent);
-      }
-    }
-  }
   .hover\:bg-bg {
     &:hover {
       @media (hover: hover) {
