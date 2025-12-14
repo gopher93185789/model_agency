@@ -219,7 +219,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 		)
 		INSERT INTO profile (user_id, approved, profile_image_url) 
 		SELECT id, $5, $6
-		FROM user_i
+		FROM user_iP
 		RETURNING id
 	`
 
