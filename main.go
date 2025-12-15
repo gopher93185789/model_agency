@@ -160,7 +160,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if err := r.ParseMultipartForm(3e+7); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		http.Redirect(w, r, "/signup?err=Failed+to+parse+form", http.StatusSeeOther)
 		return
 	}
 
@@ -180,18 +180,18 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	// defer imageFile.Close()
 
 	if schoolEmail == "" || name == "" || password == "" || role == "" {
-		http.Error(w, "School ID, name, password, and role are required", http.StatusBadRequest)
+		http.Redirect(w, r, "/signup?err=All+fields+are+required", http.StatusSeeOther)
 		return
 	}
 
 	emailPattern := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@glr\.nl$`)
 	if !emailPattern.MatchString(schoolEmail) {
-		http.Error(w, "School email must be a valid email ending with @glr.nl", http.StatusBadRequest)
+		http.Redirect(w, r, "/signup?err=Email+must+end+with+@glr.nl", http.StatusSeeOther)
 		return
 	}
 
 	if role != "model" && role != "fotograaf" {
-		http.Error(w, "Role must be one of: model, fotograaf", http.StatusBadRequest)
+		http.Redirect(w, r, "/signup?err=Invalid+role+selected", http.StatusSeeOther)
 		return
 	}
 
@@ -202,7 +202,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	passwordHash, err := hashPassword(password)
 	if err != nil {
 		log.Printf("Password hashing failed: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Redirect(w, r, "/signup?err=Internal+server+error", http.StatusSeeOther)
 		return
 	}
 
@@ -235,11 +235,11 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Database insert failed: %v", err)
 		if err.Error() == "duplicate key value violates unique constraint" {
-			http.Error(w, "Someone with that school ID already exists", http.StatusConflict)
+			http.Redirect(w, r, "/signup?err=Email+already+registered", http.StatusSeeOther)
 			return
 		}
 
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		http.Redirect(w, r, "/signup?err=Failed+to+create+account", http.StatusSeeOther)
 		return
 	}
 
@@ -251,7 +251,7 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		http.Redirect(w, r, "/login?err=Failed+to+parse+form", http.StatusSeeOther)
 		return
 	}
 
@@ -259,7 +259,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if schoolEmail == "" || password == "" {
-		http.Error(w, "Student number and password are required", http.StatusBadRequest)
+		http.Redirect(w, r, "/login?err=Email+and+password+required", http.StatusSeeOther)
 		return
 	}
 
@@ -282,12 +282,12 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Printf("Database query failed: %v", err)
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login?err=Invalid+credentials", http.StatusSeeOther)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword(passwordHash, []byte(password)); err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Redirect(w, r, "/login?err=Invalid+credentials", http.StatusSeeOther)
 		return
 	}
 
@@ -295,7 +295,7 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 	_, err = rand.Read(buf)
 	if err != nil {
 		log.Printf("Failed to generate session ID: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		http.Redirect(w, r, "/login?err=Internal+server+error", http.StatusSeeOther)
 		return
 	}
 	sid := hex.EncodeToString(buf)
@@ -398,7 +398,8 @@ func (s *ServerContext) LoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	root(pages.Login()).Render(r.Context(), w)
+	errMsg := r.URL.Query().Get("err")
+	root(pages.Login(errMsg)).Render(r.Context(), w)
 }
 func (s *ServerContext) SignupPage(w http.ResponseWriter, r *http.Request) {
 	_, ok := s.validateSession(r)
@@ -407,7 +408,8 @@ func (s *ServerContext) SignupPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	root(pages.Signup()).Render(r.Context(), w)
+	errMsg := r.URL.Query().Get("err")
+	root(pages.Signup(errMsg)).Render(r.Context(), w)
 }
 
 /*********************************************
