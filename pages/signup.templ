@@ -16,11 +16,66 @@ templ Signup(errMsg string) {
 			@components.Input("Name", "text", "name", "Enter your name", true)
 			@components.Input("Password", "password", "password", "Enter your password", true)
 			<div class="flex flex-col gap-2">
+				<label class="text-sm text-text-muted uppercase tracking-wide">Profile Image (optional)</label>
+				<script>
+					function fileHandler() {
+						return {
+							name: "No file chosen",
+							labelName: "Select Image",
+							hasImage: false,
+							handleChange() {
+								const file = this.$refs.fileInput.files[0];
+								if (file) {
+									this.name = file.name;
+									this.labelName = "Change Image";
+									this.hasImage = true;
+								} else {
+									this.name = "No file chosen";
+									this.labelName = "Select Image";
+									this.hasImage = false;
+								}
+							},
+							clearFile() {
+								this.$refs.fileInput.value = null;
+								this.name = "No file chosen";
+								this.labelName = "Select Image";
+								this.hasImage = false;
+							}
+						}
+					}
+				</script>
+				<div x-data="fileHandler()" class="flex items-center gap-3">
+					<input
+						x-ref="fileInput"
+						type="file"
+						name="profile_image"
+						accept="image/*"
+						id="profileImage"
+						class="hidden"
+						@change="handleChange()"
+					/>
+					<label
+						:text="labelName"
+						for="profileImage"
+						class="px-4 py-2 border border-border text-text rounded-sm cursor-pointer transition-colors"
+						x-text="labelName"
+					>
+						Select Image
+					</label>
+					<span class="text-text-muted italic" x-text="name"></span>
+					<button class="text-text cursor-pointer" x-show="hasImage" @click="clearFile()">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+						</svg>
+					</button>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2">
 				<label class="text-sm text-text-muted uppercase tracking-wide">Role</label>
 				<select
 					name="role"
 					required
-					class="px-4 py-3 bg-bg-light border border-border rounded-sm text-text focus:outline-none focus:border-accent transition-colors duration-200 cursor-pointer"
+					class="px-4 py-3 border border-border rounded-sm text-text focus:outline-none focus:border-accent transition-colors duration-200 cursor-pointer"
 				>
 					<option value="" disabled selected class="text-text-muted-extra">Select your role</option>
 					<option value="fotograaf" class="bg-bg-light text-text">Fotograaf</option>
