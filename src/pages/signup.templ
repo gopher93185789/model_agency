@@ -1,0 +1,101 @@
+package pages
+
+import "github.com/gopher93185789/model_agency/src/components"
+
+templ Signup(errMsg string) {
+	<div class="w-full min-h-screen flex flex-col items-center justify-center p-5">
+		@components.HomeIcon()
+		<form method="POST" action="/api/signup" enctype="multipart/form-data" class="flex flex-col gap-6 w-full max-w-md">
+			<h2 class="text-4xl font-bold text-text uppercase tracking-tight mb-8 text-center">Join Our Agency</h2>
+			if errMsg != "" {
+				<div class="px-4 py-3 bg-red-900/20 border border-red-500 rounded-sm text-red-400 text-sm">
+					{ errMsg }
+				</div>
+			}
+			@components.Input("School Email", "text", "school_email", "Enter your student email", true)
+			@components.Input("Name", "text", "name", "Enter your name", true)
+			@components.Input("Password", "password", "password", "Enter your password", true)
+			<div class="flex flex-col gap-2">
+				<label class="text-sm text-text-muted uppercase tracking-wide">Profile Image (optional)</label>
+				<script>
+					function fileHandler() {
+						return {
+							name: "No file chosen",
+							labelName: "Select Image",
+							hasImage: false,
+							handleChange() {
+								const file = this.$refs.fileInput.files[0];
+								if (file) {
+									this.name = file.name;
+									this.labelName = "Change Image";
+									this.hasImage = true;
+								} else {
+									this.name = "No file chosen";
+									this.labelName = "Select Image";
+									this.hasImage = false;
+								}
+							},
+							clearFile() {
+								this.$refs.fileInput.value = null;
+								this.name = "No file chosen";
+								this.labelName = "Select Image";
+								this.hasImage = false;
+							}
+						}
+					}
+				</script>
+				<div x-data="fileHandler()" class="flex items-center gap-3">
+					<input
+						x-ref="fileInput"
+						type="file"
+						name="profile_image"
+						accept="image/*"
+						id="profileImage"
+						class="hidden"
+						@change="handleChange()"
+					/>
+					<label
+						:text="labelName"
+						for="profileImage"
+						class="px-4 py-2 border border-border text-text rounded-sm cursor-pointer transition-colors"
+						x-text="labelName"
+					>
+						Select Image
+					</label>
+					<span class="text-text-muted italic" x-text="name"></span>
+					<button class="text-text cursor-pointer" x-show="hasImage" @click="clearFile()">
+						<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+						</svg>
+					</button>
+				</div>
+			</div>
+			<div class="flex flex-col gap-2">
+				<label class="text-sm text-text-muted uppercase tracking-wide">Role</label>
+				<select
+					name="role"
+					required
+					class="px-4 py-3 border border-border rounded-sm text-text focus:outline-none focus:border-accent transition-colors duration-200 cursor-pointer"
+				>
+					<option value="" disabled selected class="text-text-muted-extra">Select your role</option>
+					<option value="fotograaf" class="bg-bg-light text-text">Fotograaf</option>
+					<option value="model" class="bg-bg-light text-text">Model</option>
+				</select>
+			</div>
+			@components.SubmitButton("Begin Your Journey")
+			<p class="text-center text-sm text-text-muted mt-4">
+				Already have an account? 
+				<a href="/login" class="text-accent hover:text-accent-hover underline transition-colors duration-200">Login</a>
+			</p>
+		</form>
+	</div>
+	if errMsg != "" {
+		<script>
+			if (window.location.search.includes('err=')) {
+				const url = new URL(window.location);
+				url.searchParams.delete('err');
+				window.history.replaceState({}, '', url);
+			}
+		</script>
+	}
+}

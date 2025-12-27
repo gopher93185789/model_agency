@@ -1,6 +1,6 @@
 TAILWIND = npx @tailwindcss/cli
 TAILWIND_INPUT = ./globals.css
-TAILWIND_OUTPUT = ./static/dist.css
+TAILWIND_OUTPUT = ./public/dist.css
 
 TEMPL = templ
 GOFLAGS = -ldflags="-s -w" -trimpath

@@ -1,0 +1,88 @@
+package pages
+
+import "github.com/gopher93185789/model_agency/src/components"
+import "fmt"
+
+type Measurements struct {
+	Height string
+	Bust   string
+	Waist  string
+	Hips   string
+}
+
+type ModelData struct {
+	Name         string
+	TotalShoots  int
+	Email        string
+	Location     string
+	Bio          string
+	Portfolio    []string
+	Measurements Measurements
+	Editable     bool
+}
+
+templ Model(data ModelData) {
+	<div class="min-h-screen bg-bg-dark text-text p-4 md:p-6">
+		<div class="max-w-4xl mx-auto">
+			<!-- Profile Section -->
+			@components.Card("") {
+				<div class="grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 md:gap-6">
+					@components.ProfilePicture("")
+					<div class="space-y-5">
+						@components.Field("Name", data.Name, data.Editable, "text")
+						<div class="bg-bg border border-border rounded-lg p-4">
+							<div class="flex items-center justify-between mb-4">
+								<div>
+									<div class="text-3xl font-bold text-text mb-1">{ fmt.Sprintf("%d", data.TotalShoots) }</div>
+									<div class="text-text-muted text-xs uppercase tracking-wider">Total Shoots</div>
+								</div>
+								<div class="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center">
+									<svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+									</svg>
+								</div>
+							</div>
+							<div class="space-y-3 pt-3 border-t border-border">
+								@components.IconField("email", data.Email, data.Editable, "email", "Email address")
+								@components.IconField("location", data.Location, data.Editable, "text", "Location")
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+			<!-- Biography -->
+			@components.Card("Biography") {
+				@components.TextAreaField("", data.Bio, data.Editable, "Professional model with 5+ years of experience...")
+			}
+			<!-- Measurements -->
+			@components.Card("Measurements") {
+				<div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+					@components.SmallField("Height", data.Measurements.Height, data.Editable, "text")
+					@components.SmallField("Bust", data.Measurements.Bust, data.Editable, "text")
+					@components.SmallField("Waist", data.Measurements.Waist, data.Editable, "text")
+					@components.SmallField("Hips", data.Measurements.Hips, data.Editable, "text")
+				</div>
+			}
+			<!-- Portfolio -->
+			@components.Card("Portfolio") {
+				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+					for _, imageUrl := range data.Portfolio {
+						if imageUrl != "" {
+							<div class="aspect-4/5 bg-bg rounded-lg overflow-hidden border border-border">
+								<img src={ imageUrl } alt="Portfolio image" class="w-full h-full object-cover"/>
+							</div>
+						} else {
+							<div class="aspect-4/5 bg-bg rounded-lg flex items-center justify-center border border-border">
+								<svg class="w-12 h-12 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+								</svg>
+							</div>
+						}
+					}
+				</div>
+			}
+		</div>
+	</div>
+}

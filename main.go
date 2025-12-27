@@ -20,13 +20,13 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
-	"github.com/gopher93185789/model_agency/pages"
+	"github.com/gopher93185789/model_agency/src/pages"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/patrickmn/go-cache"
 	"golang.org/x/crypto/bcrypt"
 )
 
-//go:embed static/**
+//go:embed public/**
 var staticFs embed.FS
 
 const sessionCookieName string = "duke_dennis"
@@ -430,11 +430,11 @@ func main() {
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
 	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewPage))
 
-	staticSubFS, err := fs.Sub(staticFs, "static")
+	staticSubFS, err := fs.Sub(staticFs, "public")
 	if err != nil {
 		log.Fatalf("failed to start server: %v\n", err)
 	}
-	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(staticSubFS)))
+	mux.Handle("GET /public/", http.StripPrefix("/public/", http.FileServerFS(staticSubFS)))
 	mux.HandleFunc("GET /login", sctx.LoginPage)
 	mux.HandleFunc("GET /signup", sctx.SignupPage)
 

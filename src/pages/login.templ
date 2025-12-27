@@ -1,0 +1,33 @@
+package pages
+
+import "github.com/gopher93185789/model_agency/src/components"
+
+templ Login(errMsg string) {
+	<div class="w-full min-h-screen flex flex-col items-center justify-center p-5">
+		@components.HomeIcon()
+		<form method="POST" action="/api/login" enctype="application/x-www-form-urlencoded" class="flex flex-col gap-6 w-full max-w-md">
+			<h2 class="text-4xl font-bold text-text uppercase tracking-tight mb-8 text-center">Welcome Back</h2>
+			if errMsg != "" {
+				<div class="px-4 py-3 bg-red-900/20 border border-red-500 rounded-sm text-red-400 text-sm">
+					{ errMsg }
+				</div>
+			}
+			@components.Input("School Email", "text", "school_email", "Enter your school email", true)
+			@components.Input("Password", "password", "password", "Enter your password", true)
+			@components.SubmitButton("Enter")
+			<p class="text-center text-sm text-text-muted mt-4">
+				Don't have an account? 
+				<a href="/signup" class="text-accent hover:text-accent-hover underline transition-colors duration-200">Sign Up</a>
+			</p>
+		</form>
+	</div>
+	if errMsg != "" {
+		<script>
+			if (window.location.search.includes('err=')) {
+				const url = new URL(window.location);
+				url.searchParams.delete('err');
+				window.history.replaceState({}, '', url);
+			}
+		</script>
+	}
+}

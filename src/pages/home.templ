@@ -1,0 +1,46 @@
+package pages
+
+import "github.com/gopher93185789/model_agency/src/components"
+
+templ Home() {
+	<div class="w-full h-screen flex flex-col">
+		<div id="navbar" class="w-full text-xl text-text leading-relaxed uppercase flex flex-row justify-between p-5 flex-none">
+			<a href="/models" class="hover:underline duration-200 ease-in-out cursor-pointer">models</a>
+			<h1 class="hover:underline duration-200 ease-in-out cursor-pointer">Grafisch</h1>
+			<a href="/login" class="hover:underline duration-200 ease-in-out cursor-pointer">Login</a>
+		</div>
+		<div class="w-full flex flex-row grow overflow-hidden pt-10">
+			<div id="model" class="w-fit flex flex-row gap-2 h-full overflow-hidden">
+				@components.BigText("GR")
+				<img src="/public/model2.jpg" class="w-auto h-full pb-2" alt="Model"/>
+			</div>
+			<div class="flex flex-col items-start justify-end pl-2 grow overflow-hidden">
+				<p class="text-base text-text leading-relaxed uppercase">
+					Grafisch is a student-run
+					<br/>
+					modeling agency at Grafisch Lyceum
+					<br/>
+					Rotterdam, dedicated to fostering
+					<br/>
+					creativity, diversity, and inclusivity.
+					<br/>
+					We provide emerging talent with
+					<br/>
+					opportunities to shine and connect
+					<br/>
+					with a vibrant, supportive community.
+				</p>
+				<p class="text-base text-text leading-relaxed uppercase mt-10 font-bold">Graphic Lyceum</p>
+				<p class="text-base text-text leading-relaxed uppercase">
+					Rotterdam Heer Bokelweg 255
+					<br/>
+					Third Floor
+				</p>
+				<p class="text-base text-text leading-relaxed uppercase mt-10 font-bold">Contact</p>
+				<p class="text-base text-text leading-relaxed">+31 (6) 28 51 07 93</p>
+				<a href="mailto:info@grafischmodels.com" target="_blank" class="text-base text-text leading-relaxed underline">info@grafischmodels.com</a>
+				@components.BigText("SCH")
+			</div>
+		</div>
+	</div>
+}

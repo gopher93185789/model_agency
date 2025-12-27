@@ -1,0 +1,16 @@
+package components
+
+templ Input(label string, inputType string, name string, placeholder string, required bool) {
+	<div class="flex flex-col gap-2">
+		<label class="text-sm text-text-muted uppercase tracking-wide">{ label }</label>
+		<input
+			type={ inputType }
+			name={ name }
+			placeholder={ placeholder }
+			if required {
+				required
+			}
+			class="px-4 py-3 bg-dark border border-border rounded-sm text-text placeholder:text-text-muted-extra focus:outline-none focus:border-accent transition-colors duration-200"
+		/>
+	</div>
+}
