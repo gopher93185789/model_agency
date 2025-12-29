@@ -380,9 +380,9 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 		page = pages.ModelPublic(modelData)
 		s.cache.Set(sid, page, cache.DefaultExpiration)
 	case "fotograaf":
-		// since the model will have multiple db results we can try to implement 
+		// since the model will have multiple db results we can try to implement
 		// https://templ.guide/server-side-rendering/streaming
-		// never used it but it looks cool 
+		// never used it but it looks cool
 		page = pages.Fotograaf()
 		s.cache.Set(sid, page, cache.DefaultExpiration)
 	default:

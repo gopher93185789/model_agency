@@ -10,14 +10,9 @@
     --color-red-400: oklch(70.4% 0.191 22.216);
     --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-900: oklch(39.6% 0.141 25.723);
-    --color-green-500: oklch(72.3% 0.219 149.579);
-    --color-blue-500: oklch(62.3% 0.214 259.815);
-    --color-gray-300: oklch(87.2% 0.01 258.338);
-    --color-white: #fff;
     --spacing: 0.25rem;
     --container-md: 28rem;
     --container-4xl: 56rem;
-    --container-6xl: 72rem;
     --text-xs: 0.75rem;
     --text-xs--line-height: calc(1 / 0.75);
     --text-sm: 0.875rem;
@@ -32,7 +27,6 @@
     --text-3xl--line-height: calc(2.25 / 1.875);
     --text-4xl: 2.25rem;
     --text-4xl--line-height: calc(2.5 / 2.25);
-    --font-weight-medium: 500;
     --font-weight-bold: 700;
     --tracking-tight: -0.025em;
     --tracking-wide: 0.025em;
@@ -209,9 +203,6 @@
   .fixed {
     position: fixed;
   }
-  .static {
-    position: static;
-  }
   .top-6 {
     top: calc(var(--spacing) * 6);
   }
@@ -348,7 +339,7 @@
   .flex-none {
     flex: none;
   }
-  .flex-shrink-0 {
+  .shrink-0 {
     flex-shrink: 0;
   }
   .grow {
