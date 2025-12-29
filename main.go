@@ -404,6 +404,7 @@ func (s *ServerContext) LoginPage(w http.ResponseWriter, r *http.Request) {
 	errMsg := r.URL.Query().Get("err")
 	root(pages.Login(errMsg)).Render(r.Context(), w)
 }
+
 func (s *ServerContext) SignupPage(w http.ResponseWriter, r *http.Request) {
 	_, ok := s.validateSession(r)
 	if ok {
