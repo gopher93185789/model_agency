@@ -12,6 +12,9 @@ run:
 	@$(TAILWIND) -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT)
 	@go run .
 
+test: 
+	@go test ./...
+
 build: 
 	@$(TEMPL) generate
 	@$(TAILWIND) -i $(TAILWIND_INPUT) -o $(TAILWIND_OUTPUT)

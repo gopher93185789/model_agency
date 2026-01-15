@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"embed"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -19,6 +23,10 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 	"github.com/gopher93185789/model_agency/src/pages"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -87,6 +95,109 @@ func (s *sessionStore) Delete(key string) {
 	s.mu.Lock()
 	delete(s.users, key)
 	s.mu.Unlock()
+}
+
+/****************************************************
+ *                  OBJECT STORE                    *
+ ****************************************************/
+
+type ObjectStorage struct {
+	client    *s3.Client
+	presigner *s3.PresignClient
+}
+
+func NewObjectStorage(ctx context.Context, accountID, accessKey, secretKey string) (*ObjectStorage, error) {
+	cfg, err := config.LoadDefaultConfig(ctx,
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
+		config.WithRegion("auto"),
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	r2Client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID))
+	})
+
+	r2Presigner := s3.NewPresignClient(r2Client)
+	return &ObjectStorage{client: r2Client, presigner: r2Presigner}, nil
+}
+
+type UploadOptions struct {
+	CacheControl string
+	Metadata     map[string]string
+}
+
+func (s *ObjectStorage) Upload(ctx context.Context, bucketName, key string, data []byte, opt ...UploadOptions) (err error) {
+	var dataLen int64 = int64(len(data))
+
+	h := sha256.Sum256(data)
+	hash := base64.StdEncoding.EncodeToString(h[:])
+	mimeType := http.DetectContentType(data)
+
+	inp := &s3.PutObjectInput{
+		Bucket:         &bucketName,
+		Key:            aws.String(key),
+		Body:           bytes.NewReader(data),
+		ContentLength:  &dataLen,
+		ChecksumSHA256: &hash,
+		ContentType:    aws.String(mimeType),
+	}
+
+	if len(opt) != 0 {
+		if opt[0].CacheControl != "" {
+			inp.CacheControl = aws.String(opt[0].CacheControl)
+		}
+
+		if len(opt[0].Metadata) != 0 {
+			inp.Metadata = opt[0].Metadata
+		}
+	}
+
+	_, err = s.client.PutObject(ctx, inp)
+
+	return
+}
+func (s *ObjectStorage) Download(ctx context.Context, bucketName, key string) (data []byte, contentType string, err error) {
+	out, err := s.client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &key,
+	})
+	if err != nil {
+		return
+	}
+	defer out.Body.Close()
+
+	contentType = *out.ContentType
+
+	data, err = io.ReadAll(out.Body)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (s *ObjectStorage) GetSignedUrl(ctx context.Context, bucketName, key string, exp time.Duration) (url string, err error) {
+	resp, err := s.presigner.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &key,
+	}, s3.WithPresignExpires(exp))
+	if err != nil {
+		return
+	}
+
+	return resp.URL, nil
+}
+
+func (s *ObjectStorage) Delete(ctx context.Context, bucketName, key string) (err error) {
+	_, err = s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: &bucketName,
+		Key:    &key,
+	})
+
+	return
 }
 
 /***********************************************
