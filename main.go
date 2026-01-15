@@ -41,10 +41,14 @@ const sessionCookieName string = "duke_dennis"
 const sessionExp = 6 * time.Hour
 const middlewareToken = "token"
 
+const profilePictureBucketName = "profile"
+const modelPictureBucketName = "images"
+
 type ServerContext struct {
-	database *pgxpool.Pool
-	store    *sessionStore
-	cache    *cache.Cache
+	database      *pgxpool.Pool
+	store         *sessionStore
+	cache         *cache.Cache
+	objectStorage *ObjectStorage
 }
 
 func NewServerContext(database *pgxpool.Pool) *ServerContext {
@@ -284,11 +288,11 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 		profileImageUrl = ""
 		approved        = false
 	)
-	// imageFile, head, err := r.FormFile("profile_image")
-	// if err == nil {
-	// 	hasFile = true
-	// }
-	// defer imageFile.Close()
+	imageFile, head, err := r.FormFile("profile_image")
+	if err == nil {
+		hasFile = true
+		defer imageFile.Close()
+	}
 
 	if schoolEmail == "" || name == "" || password == "" || role == "" {
 		http.Redirect(w, r, "/signup?err=All+fields+are+required", http.StatusSeeOther)
@@ -317,31 +321,52 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// parse and uplad to r2 then reytn url
-	if hasFile {
-		// uplaod
-	}
-
 	query := `
 		WITH user_i AS (
 			INSERT INTO app_users (role, school_email, name, password_hash) 
 			VALUES ($1, $2, $3, $4) 
 			RETURNING id
 		)
-		INSERT INTO profile (user_id, approved, profile_image_url) 
-		SELECT id, $5, $6
+		INSERT INTO profile (user_id, approved) 
+		SELECT id, $5
 		FROM user_i
 		RETURNING id
 	`
 
-	_, err = s.database.Exec(ctx, query,
+	var userId uuid.UUID
+	err = s.database.QueryRow(ctx, query,
 		role,
 		schoolEmail,
 		name,
 		string(passwordHash),
 		approved,
-		profileImageUrl,
-	)
+	).Scan(&userId)
+
+	// parse and uplad to r2 then reytn url
+	if hasFile && s.objectStorage != nil {
+		imageData, err := io.ReadAll(imageFile)
+		if err != nil {
+			// TODO: err msg
+			return
+		}
+
+		assetKey := fmt.Sprintf("%s_profile_picture_%s", userId, head.Filename)
+		err = s.objectStorage.Upload(ctx, modelPictureBucketName, assetKey, imageData)
+		if err != nil {
+			// TODO: err msg
+			return
+		}
+
+		q := `
+			INSERT INTO profile (profile_image_url) WHERE id = $1 VALUES ($2)
+		`
+
+		_, err = s.database.Exec(ctx, q, userId, fmt.Sprintf("%s/%s", profileImageUrl, assetKey))
+		if err != nil {
+			// TODO: err msg
+			return
+		}
+	}
 
 	if err != nil {
 		log.Printf("Database insert failed: %v", err)
