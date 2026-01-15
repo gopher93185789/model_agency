@@ -43,3 +43,4 @@ Thumbs.db
 *_templ.go
 package.json
 package-lock.json
+/tmp

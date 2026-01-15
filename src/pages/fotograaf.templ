@@ -1,5 +1,11 @@
 package pages
 
-templ Fotograaf() {
-	<p class="text-text text-2xl font-bold">Fotograaf</p>
+import "github.com/gopher93185789/model_agency/pkg/types"
+
+templ Fotograaf(
+	data []types.ModelOverviewInfo,
+) {
+	for _, model := range data {
+		<p class="text-text text-2xl font-bold">{model.Name}</p>
+	}
 }

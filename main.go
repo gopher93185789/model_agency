@@ -28,6 +28,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
+	"github.com/gopher93185789/model_agency/pkg/types"
 	"github.com/gopher93185789/model_agency/src/pages"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/patrickmn/go-cache"
@@ -470,6 +471,108 @@ func (s *ServerContext) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, error) {
+	q := `
+	SELECT 
+		u.id AS user_id,
+		u.name,
+		u.school_email,
+		p.profile_image_url,
+		p.description,
+		m.location,
+		m.total_shots,
+		m.height,
+		m.bust,
+		m.waist,
+		m.hips
+	FROM app_users u
+	JOIN profile p ON u.id = p.user_id
+	JOIN model_info m ON p.id = m.id
+	WHERE u.id = $1 AND u.role = 'model'
+	`
+
+	var info types.ModelFullInfo
+	err := s.database.QueryRow(context.Background(), q, userid).Scan(
+		&info.UserID,
+		&info.Name,
+		&info.SchoolEmail,
+		&info.ProfileImageURL,
+		&info.Description,
+		&info.Location,
+		&info.TotalShots,
+		&info.Height,
+		&info.Bust,
+		&info.Waist,
+		&info.Hips,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &info, nil
+}
+
+// for fotograaf to get their own info
+func (s *ServerContext) GetFotograafInfo(userid uuid.UUID) (*types.FotograafInfo, error) {
+	q := `
+	SELECT 
+		u.id AS user_id,
+		u.name,
+		u.school_email,
+		p.profile_image_url,
+		p.description
+	FROM app_users u
+	JOIN profile p ON u.id = p.user_id
+	WHERE u.id = $1 AND u.role = 'fotograaf'
+	`
+
+	var info types.FotograafInfo
+	err := s.database.QueryRow(context.Background(), q, userid).Scan(
+		&info.UserID,
+		&info.Name,
+		&info.SchoolEmail,
+		&info.ProfileImageURL,
+		&info.Description,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &info, nil
+}
+
+func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, error) {
+	q := `
+	SELECT 
+		u.name, 
+		p.description
+	FROM app_users u
+	JOIN profile p ON u.id = p.user_id
+	WHERE u.role = 'model'
+	`
+
+	rows, err := s.database.Query(context.Background(), q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var models []types.ModelOverviewInfo
+	for rows.Next() {
+		var info types.ModelOverviewInfo
+		if err := rows.Scan(&info.Name, &info.Description); err != nil {
+			return nil, err
+		}
+		models = append(models, info)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return models, nil
+}
+
 /*********************************************
  *                  PAGES                    *
  *********************************************/
@@ -519,7 +622,14 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 		// since the model will have multiple db results we can try to implement
 		// https://templ.guide/server-side-rendering/streaming
 		// never used it but it looks cool
-		page = pages.Fotograaf()
+
+		models, err := s.GetFotograafOverviewInfo()
+		if err != nil {
+			// TODO: handle error properly
+			return
+		}
+
+		page = pages.Fotograaf(models)
 		s.cache.Set(sid, page, cache.DefaultExpiration)
 	default:
 		http.Redirect(w, r, "/", http.StatusPermanentRedirect)

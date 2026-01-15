@@ -30,6 +30,8 @@ CREATE TABLE IF NOT EXISTS model_info (
     bust INT DEFAULT 0,
     waist INT DEFAULT 0,
     hips INT DEFAULT 0
+    location TEXT
+    total_shots INT DEFAULT 0,
 );
 
 CREATE TABLE IF NOT EXISTS profile_image (
