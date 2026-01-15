@@ -94,7 +94,7 @@ func setupPostgres(schema string, testdata ...string) (*pgxpool.Pool, string, fu
 }
 
 func TestMain(m *testing.M) {
-	schema, err := os.ReadFile("init.sql")
+	schema, err := os.ReadFile("sql/init.sql")
 	if err != nil {
 		panic(err)
 	}
