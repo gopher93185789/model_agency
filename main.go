@@ -512,7 +512,6 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 	return &info, nil
 }
 
-// for fotograaf to get their own info
 func (s *ServerContext) GetFotograafInfo(userid uuid.UUID) (*types.FotograafInfo, error) {
 	q := `
 	SELECT 
@@ -544,8 +543,11 @@ func (s *ServerContext) GetFotograafInfo(userid uuid.UUID) (*types.FotograafInfo
 func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, error) {
 	q := `
 	SELECT 
-		u.name, 
-		p.description
+		u.id,
+		u.name,
+		LOWER(REPLACE(REPLACE(u.name, ' ', '-'), '.', '')) as slug,
+		p.description,
+		p.profile_image_url
 	FROM app_users u
 	JOIN profile p ON u.id = p.user_id
 	WHERE u.role = 'model'
@@ -560,7 +562,7 @@ func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, e
 	var models []types.ModelOverviewInfo
 	for rows.Next() {
 		var info types.ModelOverviewInfo
-		if err := rows.Scan(&info.Name, &info.Description); err != nil {
+		if err := rows.Scan(&info.UserID, &info.Name, &info.Slug, &info.Description, &info.ProfileImageURL); err != nil {
 			return nil, err
 		}
 		models = append(models, info)
@@ -571,6 +573,43 @@ func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, e
 	}
 
 	return models, nil
+}
+
+func (s *ServerContext) GetModelBySlug(slug string) (*pages.ModelData, error) {
+	q := `
+	SELECT 
+		u.name,
+		u.school_email,
+		COALESCE(p.description, '') as description
+	FROM app_users u
+	JOIN profile p ON u.id = p.user_id
+	WHERE u.role = 'model' AND LOWER(REPLACE(REPLACE(u.name, ' ', '-'), '.', '')) = $1
+	`
+
+	var name, email, description string
+
+	err := s.database.QueryRow(context.Background(), q, slug).Scan(
+		&name, &email, &description,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pages.ModelData{
+		Name:        name,
+		TotalShoots: 0,
+		Email:       email,
+		Location:    "",
+		Bio:         description,
+		Portfolio:   []string{},
+		Measurements: pages.Measurements{
+			Height: "0",
+			Bust:   "0",
+			Waist:  "0",
+			Hips:   "0",
+		},
+		Editable: false,
+	}, nil
 }
 
 /*********************************************
@@ -640,6 +679,23 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (s *ServerContext) modelPublicPage(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+	if slug == "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	modelData, err := s.GetModelBySlug(slug)
+	if err != nil {
+		log.Printf("Error fetching model by slug '%s': %v", slug, err)
+		root(pages.NotFound()).Render(r.Context(), w)
+		return
+	}
+
+	root(pages.ModelPublic(*modelData)).Render(r.Context(), w)
+}
+
 func (s *ServerContext) LoginPage(w http.ResponseWriter, r *http.Request) {
 	_, ok := s.validateSession(r)
 	if ok {
@@ -679,6 +735,7 @@ func main() {
 	// pages
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
 	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewPage))
+	mux.HandleFunc("GET /model/{slug}", sctx.modelPublicPage)
 
 	staticSubFS, err := fs.Sub(staticFs, "public")
 	if err != nil {

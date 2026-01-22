@@ -1,11 +1,18 @@
 package pages
 
-import "github.com/gopher93185789/model_agency/pkg/types"
+import (
+	"github.com/gopher93185789/model_agency/pkg/types"
+	"github.com/gopher93185789/model_agency/src/components"
+)
 
-templ Fotograaf(
-	data []types.ModelOverviewInfo,
-) {
-	for _, model := range data {
-		<p class="text-text text-2xl font-bold">{model.Name}</p>
-	}
+templ Fotograaf(data []types.ModelOverviewInfo) {
+	<main>
+		<header>
+			<h1 class="text-9xl font-bold mb-6 text-text">Fotografen Overzicht</h1>
+			<p class="text-text-muted mb-10">
+				Een overzicht van alle beschikbare fotografen in ons netwerk.
+			</p>
+		</header>
+		@components.CardGrid(data)
+	</main>
 }

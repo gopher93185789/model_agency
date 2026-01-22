@@ -65,6 +65,9 @@ type FotograafInfo struct {
 }
 
 type ModelOverviewInfo struct {
-	Name        string  `json:"name" db:"name"`
-	Description *string `json:"description" db:"description"`
+	UserID          uuid.UUID `json:"user_id" db:"user_id"`
+	Name            string    `json:"name" db:"name"`
+	Slug            string    `json:"slug" db:"slug"`
+	Description     *string   `json:"description" db:"description"`
+	ProfileImageURL *string   `json:"profile_image_url" db:"profile_image_url"`
 }

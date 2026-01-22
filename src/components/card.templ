@@ -1,10 +1,49 @@
 package components
 
-templ Card(title string) {
-	<div class="bg-bg-light rounded-lg p-4 md:p-6 mb-4">
-		if title != "" {
-			<h2 class="text-text-muted text-xs uppercase tracking-wider mb-4">{ title }</h2>
+import "github.com/gopher93185789/model_agency/pkg/types"
+
+func getProfileImage(url *string) string {
+	if url == nil {
+		return ""
+	}
+	return *url
+}
+
+func getDescription(desc *string) string {
+	if desc == nil {
+		return "No description available"
+	}
+	return *desc
+}
+
+templ Card(data types.ModelOverviewInfo) {
+	<a href={ templ.SafeURL("/model/" + data.Slug) } class="bg-bg-light overflow-hidden block hover:ring-1 hover:ring-border transition-all duration-200 ease-in-out cursor-pointer group">
+		<div class="aspect-[3/4] w-full overflow-hidden">
+			if data.ProfileImageURL != nil {
+				<img 
+					src={ getProfileImage(data.ProfileImageURL) } 
+					alt={ data.Name } 
+					class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
+				/>
+			} else {
+				<div class="w-full h-full bg-bg flex items-center justify-center">
+					<svg class="w-16 h-16 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+					</svg>
+				</div>
+			}
+		</div>
+		<div class="p-4">
+			<h3 class="text-text text-lg font-medium uppercase tracking-wide">{ data.Name }</h3>
+			<p class="text-text-muted text-sm mt-2 line-clamp-2">{ getDescription(data.Description) }</p>
+		</div>
+	</a>
+}
+
+templ CardGrid(data []types.ModelOverviewInfo) {
+	<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+		for _, model := range data {
+			@Card(model)
 		}
-		{ children... }
 	</div>
 }
