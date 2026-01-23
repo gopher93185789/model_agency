@@ -19,11 +19,12 @@ type AppUser struct {
 }
 
 type Profile struct {
-	ID              uuid.UUID `json:"id" db:"id"`
-	UserID          uuid.UUID `json:"user_id" db:"user_id"`
-	Approved        bool      `json:"approved" db:"approved"`
-	ProfileImageURL *string   `json:"profile_image_url" db:"profile_image_url"`
-	Description     *string   `json:"description" db:"description"`
+	ID                 uuid.UUID `json:"id" db:"id"`
+	UserID             uuid.UUID `json:"user_id" db:"user_id"`
+	Approved           bool      `json:"approved" db:"approved"`
+	ProfileImageName   *string   `json:"profile_image_name" db:"profile_image_name"`
+	ProfileImageBase64 *string   `json:"profile_image_base64" db:"profile_image_base64"`
+	Description        *string   `json:"description" db:"description"`
 }
 
 type ModelInfo struct {
@@ -36,38 +37,37 @@ type ModelInfo struct {
 	TotalShots int       `json:"total_shots" db:"total_shots"`
 }
 
-type ProfileImage struct {
-	ID        uuid.UUID `json:"id" db:"id"`
-	ProfileID uuid.UUID `json:"profile_id" db:"profile_id"`
-	ImageURL  string    `json:"image_url" db:"image_url"`
-}
+// Deprecated: URL-based image struct removed.
 
 type ModelFullInfo struct {
-	UserID          uuid.UUID `json:"user_id" db:"user_id"`
-	Name            string    `json:"name" db:"name"`
-	SchoolEmail     string    `json:"school_email" db:"school_email"`
-	ProfileImageURL *string   `json:"profile_image_url" db:"profile_image_url"`
-	Description     *string   `json:"description" db:"description"`
-	Location        *string   `json:"location" db:"location"`
-	TotalShots      int       `json:"total_shots" db:"total_shots"`
-	Height          int       `json:"height" db:"height"`
-	Bust            int       `json:"bust" db:"bust"`
-	Waist           int       `json:"waist" db:"waist"`
-	Hips            int       `json:"hips" db:"hips"`
+	UserID             uuid.UUID `json:"user_id" db:"user_id"`
+	Name               string    `json:"name" db:"name"`
+	SchoolEmail        string    `json:"school_email" db:"school_email"`
+	ProfileImageName   *string   `json:"profile_image_name" db:"profile_image_name"`
+	ProfileImageBase64 *string   `json:"profile_image_base64" db:"profile_image_base64"`
+	Description        *string   `json:"description" db:"description"`
+	Location           *string   `json:"location" db:"location"`
+	TotalShots         int       `json:"total_shots" db:"total_shots"`
+	Height             int       `json:"height" db:"height"`
+	Bust               int       `json:"bust" db:"bust"`
+	Waist              int       `json:"waist" db:"waist"`
+	Hips               int       `json:"hips" db:"hips"`
 }
 
 type FotograafInfo struct {
-	UserID          uuid.UUID `json:"user_id" db:"user_id"`
-	Name            string    `json:"name" db:"name"`
-	SchoolEmail     string    `json:"school_email" db:"school_email"`
-	ProfileImageURL *string   `json:"profile_image_url" db:"profile_image_url"`
-	Description     *string   `json:"description" db:"description"`
+	UserID             uuid.UUID `json:"user_id" db:"user_id"`
+	Name               string    `json:"name" db:"name"`
+	SchoolEmail        string    `json:"school_email" db:"school_email"`
+	ProfileImageName   *string   `json:"profile_image_name" db:"profile_image_name"`
+	ProfileImageBase64 *string   `json:"profile_image_base64" db:"profile_image_base64"`
+	Description        *string   `json:"description" db:"description"`
 }
 
 type ModelOverviewInfo struct {
-	UserID          uuid.UUID `json:"user_id" db:"user_id"`
-	Name            string    `json:"name" db:"name"`
-	Slug            string    `json:"slug" db:"slug"`
-	Description     *string   `json:"description" db:"description"`
-	ProfileImageURL *string   `json:"profile_image_url" db:"profile_image_url"`
+	UserID             uuid.UUID `json:"user_id" db:"user_id"`
+	Name               string    `json:"name" db:"name"`
+	Slug               string    `json:"slug" db:"slug"`
+	Description        *string   `json:"description" db:"description"`
+	ProfileImageName   *string   `json:"profile_image_name" db:"profile_image_name"`
+	ProfileImageBase64 *string   `json:"profile_image_base64" db:"profile_image_base64"`
 }
