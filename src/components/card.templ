@@ -2,11 +2,11 @@ package components
 
 import "github.com/gopher93185789/model_agency/pkg/types"
 
-func getProfileImage(url *string) string {
-	if url == nil {
+func getProfileImageBase64(b64 *string) string {
+	if b64 == nil {
 		return ""
 	}
-	return *url
+	return *b64
 }
 
 func getDescription(desc *string) string {
@@ -18,10 +18,10 @@ func getDescription(desc *string) string {
 
 templ Card(data types.ModelOverviewInfo) {
 	<a href={ templ.SafeURL("/model/" + data.Slug) } class="bg-bg-light overflow-hidden block hover:ring-1 hover:ring-border transition-all duration-200 ease-in-out cursor-pointer group">
-		<div class="aspect-[3/4] w-full overflow-hidden">
-			if data.ProfileImageURL != nil {
+		<div class="aspect-3/4 w-full overflow-hidden">
+			if data.ProfileImageBase64 != nil {
 				<img 
-					src={ getProfileImage(data.ProfileImageURL) } 
+					src={ "data:;base64," + getProfileImageBase64(data.ProfileImageBase64) } 
 					alt={ data.Name } 
 					class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-in-out"
 				/>

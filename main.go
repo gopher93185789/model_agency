@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"crypto/sha256"
+	"crypto/rand"
 	"embed"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -20,10 +20,6 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gopher93185789/model_agency/pkg/types"
@@ -40,13 +36,11 @@ const sessionCookieName string = "duke_dennis"
 const sessionExp = 6 * time.Hour
 const middlewareToken = "token"
 
-const profilePictureBucketName = "profile"
-const modelPictureBucketName = "images"
+// No object storage; images stored in Postgres as BYTEA.
 
 type ServerContext struct {
-	database      *pgxpool.Pool
-	cache         *cache.Cache
-	objectStorage *ObjectStorage
+	database *pgxpool.Pool
+	cache    *cache.Cache
 }
 
 func NewServerContext(database *pgxpool.Pool) *ServerContext {
@@ -99,107 +93,22 @@ func (s *ServerContext) parseToken(tokenStr string) (*Claims, error) {
 	return nil, fmt.Errorf("invalid token")
 }
 
-/****************************************************
- *                  OBJECT STORE                    *
- ****************************************************/
-
-type ObjectStorage struct {
-	client    *s3.Client
-	presigner *s3.PresignClient
+/**
+ *                  IMAGE HELPERS                   *
+ */
+func randomImageName() (string, error) {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(b), nil
 }
 
-func NewObjectStorage(ctx context.Context, accountID, accessKey, secretKey string) (*ObjectStorage, error) {
-	cfg, err := config.LoadDefaultConfig(ctx,
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKey, secretKey, "")),
-		config.WithRegion("auto"),
-	)
-
-	if err != nil {
-		return nil, err
+func toBase64(data []byte) string {
+	if len(data) == 0 {
+		return ""
 	}
-
-	r2Client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		o.BaseEndpoint = aws.String(fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID))
-	})
-
-	r2Presigner := s3.NewPresignClient(r2Client)
-	return &ObjectStorage{client: r2Client, presigner: r2Presigner}, nil
-}
-
-type UploadOptions struct {
-	CacheControl string
-	Metadata     map[string]string
-}
-
-func (s *ObjectStorage) Upload(ctx context.Context, bucketName, key string, data []byte, opt ...UploadOptions) (err error) {
-	var dataLen int64 = int64(len(data))
-
-	h := sha256.Sum256(data)
-	hash := base64.StdEncoding.EncodeToString(h[:])
-	mimeType := http.DetectContentType(data)
-
-	inp := &s3.PutObjectInput{
-		Bucket:         &bucketName,
-		Key:            aws.String(key),
-		Body:           bytes.NewReader(data),
-		ContentLength:  &dataLen,
-		ChecksumSHA256: &hash,
-		ContentType:    aws.String(mimeType),
-	}
-
-	if len(opt) != 0 {
-		if opt[0].CacheControl != "" {
-			inp.CacheControl = aws.String(opt[0].CacheControl)
-		}
-
-		if len(opt[0].Metadata) != 0 {
-			inp.Metadata = opt[0].Metadata
-		}
-	}
-
-	_, err = s.client.PutObject(ctx, inp)
-
-	return
-}
-func (s *ObjectStorage) Download(ctx context.Context, bucketName, key string) (data []byte, contentType string, err error) {
-	out, err := s.client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: &bucketName,
-		Key:    &key,
-	})
-	if err != nil {
-		return
-	}
-	defer out.Body.Close()
-
-	contentType = *out.ContentType
-
-	data, err = io.ReadAll(out.Body)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (s *ObjectStorage) GetSignedUrl(ctx context.Context, bucketName, key string, exp time.Duration) (url string, err error) {
-	resp, err := s.presigner.PresignGetObject(ctx, &s3.GetObjectInput{
-		Bucket: &bucketName,
-		Key:    &key,
-	}, s3.WithPresignExpires(exp))
-	if err != nil {
-		return
-	}
-
-	return resp.URL, nil
-}
-
-func (s *ObjectStorage) Delete(ctx context.Context, bucketName, key string) (err error) {
-	_, err = s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: &bucketName,
-		Key:    &key,
-	})
-
-	return
+	return base64.StdEncoding.EncodeToString(data)
 }
 
 /***********************************************
@@ -263,15 +172,14 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		schoolEmail     = r.FormValue("school_email")
-		name            = r.FormValue("name")
-		password        = r.FormValue("password")
-		role            = r.FormValue("role")
-		hasFile         = false
-		profileImageUrl = ""
-		approved        = false
+		schoolEmail = r.FormValue("school_email")
+		name        = r.FormValue("name")
+		password    = r.FormValue("password")
+		role        = r.FormValue("role")
+		hasFile     = false
+		approved    = false
 	)
-	imageFile, head, err := r.FormFile("profile_image")
+	imageFile, _, err := r.FormFile("profile_image")
 	if err == nil {
 		hasFile = true
 		defer imageFile.Close()
@@ -316,37 +224,49 @@ func (s *ServerContext) Signup(w http.ResponseWriter, r *http.Request) {
 		RETURNING id
 	`
 
-	var userId uuid.UUID
+	var profileId uuid.UUID
 	err = s.database.QueryRow(ctx, query,
 		role,
 		schoolEmail,
 		name,
 		string(passwordHash),
 		approved,
-	).Scan(&userId)
+	).Scan(&profileId)
 
-	// parse and uplad to r2 then reytn url
-	if hasFile && s.objectStorage != nil {
+	// read file and store bytes directly
+	if hasFile {
 		imageData, err := io.ReadAll(imageFile)
 		if err != nil {
-			// TODO: err msg
+			http.Redirect(w, r, "/signup?err=Failed+to+read+image", http.StatusSeeOther)
 			return
 		}
 
-		assetKey := fmt.Sprintf("%s_profile_picture_%s", userId, head.Filename)
-		err = s.objectStorage.Upload(ctx, modelPictureBucketName, assetKey, imageData)
+		// basic MIME allow-list
+		mime := http.DetectContentType(imageData)
+		switch {
+		case strings.HasPrefix(mime, "image/jpeg"), strings.HasPrefix(mime, "image/png"), strings.HasPrefix(mime, "image/webp"):
+			// ok
+		default:
+			http.Redirect(w, r, "/signup?err=Unsupported+image+type", http.StatusSeeOther)
+			return
+		}
+
+		randomName, err := randomImageName()
 		if err != nil {
-			// TODO: err msg
+			http.Redirect(w, r, "/signup?err=Failed+to+create+image+name", http.StatusSeeOther)
 			return
 		}
 
 		q := `
-			INSERT INTO profile (profile_image_url) WHERE id = $1 VALUES ($2)
+			UPDATE profile
+			SET profile_image_name = $2,
+				profile_image_data = $3
+			WHERE id = $1
 		`
 
-		_, err = s.database.Exec(ctx, q, userId, fmt.Sprintf("%s/%s", profileImageUrl, assetKey))
+		_, err = s.database.Exec(ctx, q, profileId, randomName, imageData)
 		if err != nil {
-			// TODO: err msg
+			http.Redirect(w, r, "/signup?err=Failed+to+save+image", http.StatusSeeOther)
 			return
 		}
 	}
@@ -451,7 +371,8 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 		u.id AS user_id,
 		u.name,
 		u.school_email,
-		p.profile_image_url,
+		p.profile_image_name,
+		p.profile_image_data,
 		p.description,
 		m.location,
 		m.total_shots,
@@ -465,12 +386,17 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 	WHERE u.id = $1 AND u.role = 'model'
 	`
 
-	var info types.ModelFullInfo
+	var (
+		info       types.ModelFullInfo
+		imageName  *string
+		imageBytes []byte
+	)
 	err := s.database.QueryRow(context.Background(), q, userid).Scan(
 		&info.UserID,
 		&info.Name,
 		&info.SchoolEmail,
-		&info.ProfileImageURL,
+		&imageName,
+		&imageBytes,
 		&info.Description,
 		&info.Location,
 		&info.TotalShots,
@@ -483,6 +409,12 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 		return nil, err
 	}
 
+	info.ProfileImageName = imageName
+	if len(imageBytes) > 0 {
+		b64 := toBase64(imageBytes)
+		info.ProfileImageBase64 = &b64
+	}
+
 	return &info, nil
 }
 
@@ -492,23 +424,35 @@ func (s *ServerContext) GetFotograafInfo(userid uuid.UUID) (*types.FotograafInfo
 		u.id AS user_id,
 		u.name,
 		u.school_email,
-		p.profile_image_url,
+		p.profile_image_name,
+		p.profile_image_data,
 		p.description
 	FROM app_users u
 	JOIN profile p ON u.id = p.user_id
 	WHERE u.id = $1 AND u.role = 'fotograaf'
 	`
 
-	var info types.FotograafInfo
+	var (
+		info       types.FotograafInfo
+		imageName  *string
+		imageBytes []byte
+	)
 	err := s.database.QueryRow(context.Background(), q, userid).Scan(
 		&info.UserID,
 		&info.Name,
 		&info.SchoolEmail,
-		&info.ProfileImageURL,
+		&imageName,
+		&imageBytes,
 		&info.Description,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	info.ProfileImageName = imageName
+	if len(imageBytes) > 0 {
+		b64 := toBase64(imageBytes)
+		info.ProfileImageBase64 = &b64
 	}
 
 	return &info, nil
@@ -521,7 +465,8 @@ func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, e
 		u.name,
 		LOWER(REPLACE(REPLACE(u.name, ' ', '-'), '.', '')) as slug,
 		p.description,
-		p.profile_image_url
+		p.profile_image_name,
+		p.profile_image_data
 	FROM app_users u
 	JOIN profile p ON u.id = p.user_id
 	WHERE u.role = 'model'
@@ -535,9 +480,18 @@ func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, e
 
 	var models []types.ModelOverviewInfo
 	for rows.Next() {
-		var info types.ModelOverviewInfo
-		if err := rows.Scan(&info.UserID, &info.Name, &info.Slug, &info.Description, &info.ProfileImageURL); err != nil {
+		var (
+			info       types.ModelOverviewInfo
+			imageName  *string
+			imageBytes []byte
+		)
+		if err := rows.Scan(&info.UserID, &info.Name, &info.Slug, &info.Description, &imageName, &imageBytes); err != nil {
 			return nil, err
+		}
+		info.ProfileImageName = imageName
+		if len(imageBytes) > 0 {
+			b64 := toBase64(imageBytes)
+			info.ProfileImageBase64 = &b64
 		}
 		models = append(models, info)
 	}
@@ -604,14 +558,12 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-
 	if p, ok := s.cache.Get(sid); ok {
 		if v, ok := p.(templ.Component); ok {
 			root(v).Render(r.Context(), w)
 			return
 		}
 	}
-
 
 	claims, err := s.parseToken(sid)
 	if err != nil {
