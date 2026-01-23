@@ -3,7 +3,10 @@
 Running (quick)
 
 ```bash
-make run
+make deps
+make css
+make gen
+air
 ```
 
 Project summary
