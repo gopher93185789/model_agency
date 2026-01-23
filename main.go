@@ -3,11 +3,9 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"embed"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,7 +16,6 @@ import (
 	"os/signal"
 	"regexp"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -27,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/gopher93185789/model_agency/pkg/types"
 	"github.com/gopher93185789/model_agency/src/pages"
@@ -47,7 +45,6 @@ const modelPictureBucketName = "images"
 
 type ServerContext struct {
 	database      *pgxpool.Pool
-	store         *sessionStore
 	cache         *cache.Cache
 	objectStorage *ObjectStorage
 }
@@ -56,50 +53,50 @@ func NewServerContext(database *pgxpool.Pool) *ServerContext {
 	return &ServerContext{
 		database: database,
 		cache:    cache.New(5*time.Minute, 1*time.Minute),
-		store: &sessionStore{
-			mu:    sync.RWMutex{},
-			users: make(map[string]storePayload),
-		},
 	}
 }
 
 /*****************************************************
- *                  SESSION STORE                    *
+ *                    JWT HELPERS                     *
  *****************************************************/
-type storePayload struct {
-	UserId     uuid.UUID
-	Role       string
-	Expiry     time.Time
-	ProfileUrl string
+
+type Claims struct {
+	UserID     string `json:"user_id"`
+	Role       string `json:"role"`
+	ProfileUrl string `json:"profile_url"`
+	jwt.RegisteredClaims
 }
 
-type sessionStore struct {
-	mu    sync.RWMutex
-	users map[string]storePayload
-}
+var jwtKey []byte
 
-func (s *sessionStore) Get(key string) (st storePayload, err error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	st, ok := s.users[key]
-	if !ok {
-		return st, fmt.Errorf("no value matches give key")
+func (s *ServerContext) createToken(userId uuid.UUID, role string, profileUrl string) (string, time.Time, error) {
+	exp := time.Now().Add(sessionExp)
+	claims := &Claims{
+		UserID:     userId.String(),
+		Role:       role,
+		ProfileUrl: profileUrl,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(exp),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 	}
 
-	return st, nil
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString(jwtKey)
+	return signed, exp, err
 }
 
-func (s *sessionStore) Set(key string, val storePayload) {
-	s.mu.Lock()
-	s.users[key] = val
-	s.mu.Unlock()
-}
-
-func (s *sessionStore) Delete(key string) {
-	s.mu.Lock()
-	delete(s.users, key)
-	s.mu.Unlock()
+func (s *ServerContext) parseToken(tokenStr string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(t *jwt.Token) (any, error) {
+		return jwtKey, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		return claims, nil
+	}
+	return nil, fmt.Errorf("invalid token")
 }
 
 /****************************************************
@@ -227,33 +224,18 @@ func (s *ServerContext) validateSession(r *http.Request) (string, bool) {
 	if err != nil || cookie.Value == "" {
 		return "", false
 	}
-	sessionid := cookie.Value
 
-	st, err := s.store.Get(sessionid)
+	tokenStr := cookie.Value
+	_, err = s.parseToken(tokenStr)
 	if err != nil {
 		return "", false
-
 	}
-
-	if time.Now().After(st.Expiry) {
-		s.store.Delete(sessionid)
-		return "", false
-	}
-
-	return sessionid, true
+	return tokenStr, true
 }
 
 /**************************************************
  *                  MIDDLEWARE                    *
  **************************************************/
-/*
-# to get user info easy for lazy nihg:
-	st, err := s.store.Get(r.Header.Get(middlewareToken))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-*/
 func (s *ServerContext) AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		sessionid, ok := s.validateSession(r)
@@ -428,25 +410,16 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var buf = make([]byte, 12)
-	_, err = rand.Read(buf)
+	tokenStr, exp, err := s.createToken(id, role, "")
 	if err != nil {
-		log.Printf("Failed to generate session ID: %v", err)
+		log.Printf("Failed to create token: %v", err)
 		http.Redirect(w, r, "/login?err=Internal+server+error", http.StatusSeeOther)
 		return
 	}
-	sid := hex.EncodeToString(buf)
-	exp := time.Now().Add(sessionExp)
-
-	s.store.Set(sid, storePayload{
-		UserId: id,
-		Role:   role,
-		Expiry: exp,
-	})
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
-		Value:    sid,
+		Value:    tokenStr,
 		Expires:  exp,
 		HttpOnly: true,
 		Secure:   true,
@@ -459,13 +432,14 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *ServerContext) Logout(w http.ResponseWriter, r *http.Request) {
-	s.store.Delete(middlewareToken)
 	http.SetCookie(w, &http.Cookie{
 		Name:     sessionCookieName,
 		Value:    "",
 		MaxAge:   -1,
+		Path:     "/",
 		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -621,21 +595,31 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 	)
 
 	sid := r.Header.Get(middlewareToken)
-	p, ok := s.cache.Get(sid)
-	if ok {
+	if sid == "" {
+		if token, ok := s.validateSession(r); ok {
+			sid = token
+		} else {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+	}
+
+
+	if p, ok := s.cache.Get(sid); ok {
 		if v, ok := p.(templ.Component); ok {
 			root(v).Render(r.Context(), w)
 			return
 		}
 	}
 
-	st, err := s.store.Get(sid)
+
+	claims, err := s.parseToken(sid)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	switch st.Role {
+	switch claims.Role {
 	case "docent":
 		page = pages.Docent()
 		s.cache.Set(sid, page, cache.DefaultExpiration)
@@ -721,6 +705,11 @@ func (s *ServerContext) SignupPage(w http.ResponseWriter, r *http.Request) {
 /*********************************************
  *                  ENTRY                    *
  *********************************************/
+
+func init() {
+	jwtKey = []byte("soifhsloihsidjhljishai`sjrfhiajd")
+}
+
 func main() {
 	mux := http.NewServeMux()
 	dsn := os.Getenv("DSN")
@@ -732,6 +721,7 @@ func main() {
 		panic(err)
 	}
 	sctx := NewServerContext(conn)
+
 	// pages
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
 	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewPage))
