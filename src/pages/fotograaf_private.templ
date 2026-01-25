@@ -1,0 +1,98 @@
+package pages
+
+templ FotograafPrivate(data FotograafData) {
+	<main class="min-h-screen bg-bg-dark">
+		<header class="border-b border-border">
+			<div class="flex items-center justify-between py-6 px-8">
+				<a href="/overview" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
+					← Terug
+				</a>
+				<div class="flex items-center gap-6">
+					<span class="text-accent uppercase tracking-wider text-xs">Bewerken</span>
+					<form action="/api/logout" method="POST">
+						<button type="submit" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
+							Uitloggen
+						</button>
+					</form>
+				</div>
+			</div>
+		</header>
+
+		<form action="/api/profile/update" method="POST" enctype="multipart/form-data">
+			<input type="hidden" name="role" value="fotograaf"/>
+			
+			<div class="grid grid-cols-1 lg:grid-cols-2">
+				<div class="border-r border-border">
+					<div class="aspect-[3/4] w-full overflow-hidden bg-bg relative group">
+						if data.ProfileImageBase64 != "" {
+							<img 
+								src={ "data:;base64," + data.ProfileImageBase64 } 
+								alt={ data.Name } 
+								class="w-full h-full object-cover"
+							/>
+						} else {
+							<div class="w-full h-full flex items-end p-12">
+								<span class="text-text-muted text-[20rem] font-black uppercase opacity-10 leading-none">{ string(data.Name[0]) }</span>
+							</div>
+						}
+						<label class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
+							<div class="text-center">
+								<svg class="w-12 h-12 mx-auto mb-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+								</svg>
+								<span class="text-white uppercase tracking-wider text-sm">Foto Wijzigen</span>
+							</div>
+							<input type="file" name="profile_image" accept="image/*" class="hidden"/>
+						</label>
+					</div>
+				</div>
+
+				<div class="flex flex-col">
+					<div class="border-b border-border p-8">
+						<h1 class="text-5xl md:text-6xl font-black text-text uppercase tracking-tighter">{ data.Name }</h1>
+						<p class="text-text-muted uppercase tracking-wider mt-2">Fotograaf</p>
+					</div>
+
+					<div class="border-b border-border p-8">
+						<h2 class="text-text-muted uppercase tracking-wider text-xs mb-6">Contact</h2>
+						<div>
+							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Email</label>
+							<p class="text-text uppercase tracking-wide">{ data.Email }</p>
+						</div>
+					</div>
+
+					<div class="p-8 flex-1">
+						<h2 class="text-text-muted uppercase tracking-wider text-xs mb-6">Over</h2>
+						<textarea 
+							name="bio" 
+							placeholder="Vertel iets over jezelf..."
+							rows="6"
+							class="w-full bg-transparent border border-border text-text p-4 focus:outline-none focus:border-text transition-colors resize-none"
+						>{ data.Bio }</textarea>
+					</div>
+
+					<div class="border-t border-border p-8">
+						<button type="submit" class="w-full bg-text text-bg-dark py-4 uppercase tracking-wider text-sm font-bold hover:bg-text/90 transition-colors">
+							Opslaan
+						</button>
+					</div>
+				</div>
+			</div>
+		</form>
+
+		<div class="border-t border-border">
+			<div class="p-8">
+				<div class="border border-red-500/30 p-8">
+					<h3 class="text-red-400 font-bold uppercase tracking-wider text-sm mb-2">Gevaarzone</h3>
+					<p class="text-text-muted text-sm mb-6">Als je je account verwijdert, is er geen weg terug. Wees zeker.</p>
+					<form action="/api/profile/delete" method="POST" onsubmit="return confirm('Weet je zeker dat je je account wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.');">
+						<button type="submit" class="border border-red-500 text-red-400 px-6 py-3 uppercase tracking-wider text-sm hover:bg-red-500 hover:text-white transition-colors">
+							Account Verwijderen
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</main>
+}

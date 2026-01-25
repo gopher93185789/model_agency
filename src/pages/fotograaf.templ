@@ -2,17 +2,176 @@ package pages
 
 import (
 	"github.com/gopher93185789/model_agency/pkg/types"
-	"github.com/gopher93185789/model_agency/src/components"
 )
 
+func getProfileImage(b64 *string) string {
+	if b64 == nil {
+		return ""
+	}
+	return *b64
+}
+
+func getDesc(desc *string) string {
+	if desc == nil {
+		return ""
+	}
+	return *desc
+}
+
 templ Fotograaf(data []types.ModelOverviewInfo) {
-	<main>
-		<header>
-			<h1 class="text-9xl font-bold mb-6 text-text">Fotografen Overzicht</h1>
-			<p class="text-text-muted mb-10">
-				Een overzicht van alle beschikbare fotografen in ons netwerk.
-			</p>
+	<main class="min-h-screen bg-bg-dark">
+		<header class="border-b border-border">
+			<div class="flex items-center justify-between py-6 px-8">
+				<div class="flex items-center gap-8">
+					<h1 class="text-6xl font-black text-text uppercase tracking-tighter">Models</h1>
+					<span class="text-text-muted text-lg">{ len(data) } beschikbaar</span>
+				</div>
+				<div class="flex items-center gap-6">
+					<form action="/api/logout" method="POST">
+						<button type="submit" class="text-text-muted hover:text-text transition-colors text-sm uppercase tracking-wider">
+							Logout
+						</button>
+					</form>
+					<a href="/profile" class="bg-white text-black font-bold py-4 px-8 uppercase tracking-wider text-sm hover:bg-text-muted transition-colors">
+						Mijn Profiel
+					</a>
+				</div>
+			</div>
 		</header>
-		@components.CardGrid(data)
+
+		<div class="border-b border-border">
+			<div class="flex items-center gap-0">
+				<div class="flex-1 border-r border-border">
+					<input 
+						type="text" 
+						id="search-input"
+						placeholder="ZOEKEN..." 
+						class="w-full bg-transparent px-8 py-5 text-text text-lg placeholder-text-muted focus:outline-none uppercase tracking-wider"
+					/>
+				</div>
+				<select 
+					id="sort-select"
+					class="bg-transparent border-r border-border px-8 py-5 text-text text-sm focus:outline-none cursor-pointer uppercase tracking-wider"
+				>
+					<option value="name-asc" class="bg-bg-dark">A — Z</option>
+					<option value="name-desc" class="bg-bg-dark">Z — A</option>
+				</select>
+				<div class="flex">
+					<button 
+						class="filter-btn active px-8 py-5 text-sm font-bold uppercase tracking-wider bg-white text-black transition-colors"
+						data-filter="all"
+					>
+						Alle
+					</button>
+					<button 
+						class="filter-btn px-8 py-5 text-sm uppercase tracking-wider text-text-muted hover:text-text border-l border-border transition-colors"
+						data-filter="with-photo"
+					>
+						Met Foto
+					</button>
+					<button 
+						class="filter-btn px-8 py-5 text-sm uppercase tracking-wider text-text-muted hover:text-text border-l border-border transition-colors"
+						data-filter="with-bio"
+					>
+						Met Bio
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="models-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+			for _, model := range data {
+				<a href={ templ.SafeURL("/model/" + model.Slug) } class="group block border-b border-r border-border overflow-hidden">
+					<div class="aspect-[3/4] w-full overflow-hidden bg-bg">
+						if model.ProfileImageBase64 != nil {
+							<img 
+								src={ "data:;base64," + getProfileImage(model.ProfileImageBase64) } 
+								alt={ model.Name } 
+								class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+							/>
+						} else {
+							<div class="w-full h-full flex items-end p-8">
+								<span class="text-text-muted text-8xl font-black uppercase opacity-20">{ string(model.Name[0]) }</span>
+							</div>
+						}
+					</div>
+					<div class="p-6 border-t border-border bg-bg-dark group-hover:bg-bg-light transition-colors">
+						<h3 class="text-text text-2xl font-bold uppercase tracking-tight">{ model.Name }</h3>
+						if getDesc(model.Description) != "" {
+							<p class="text-text-muted text-sm mt-2 line-clamp-2 uppercase tracking-wider">{ getDesc(model.Description) }</p>
+						}
+					</div>
+				</a>
+			}
+		</div>
+
+		if len(data) == 0 {
+			<div class="py-32 px-8">
+				<h3 class="text-text text-4xl font-black uppercase tracking-tighter mb-4">Geen models</h3>
+				<p class="text-text-muted uppercase tracking-wider">Er zijn nog geen models beschikbaar.</p>
+			</div>
+		}
+
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const searchInput = document.getElementById('search-input');
+				const sortSelect = document.getElementById('sort-select');
+				const filterBtns = document.querySelectorAll('.filter-btn');
+				const grid = document.getElementById('models-grid');
+				
+				if (!grid) return;
+				
+				const cards = Array.from(grid.children);
+				let activeFilter = 'all';
+
+				function filterAndSort() {
+					const searchTerm = searchInput.value.toLowerCase();
+					const sortValue = sortSelect.value;
+					
+					let filteredCards = cards.filter(card => {
+						const name = card.querySelector('h3')?.textContent.toLowerCase() || '';
+						const bio = card.querySelector('p')?.textContent.toLowerCase() || '';
+						const hasPhoto = card.querySelector('img') !== null;
+						const hasBio = bio && bio.length > 0;
+						
+						const matchesSearch = name.includes(searchTerm) || bio.includes(searchTerm);
+						
+						let matchesFilter = true;
+						if (activeFilter === 'with-photo') matchesFilter = hasPhoto;
+						if (activeFilter === 'with-bio') matchesFilter = hasBio;
+						
+						return matchesSearch && matchesFilter;
+					});
+
+					filteredCards.sort((a, b) => {
+						const nameA = a.querySelector('h3')?.textContent || '';
+						const nameB = b.querySelector('h3')?.textContent || '';
+						
+						if (sortValue === 'name-asc') return nameA.localeCompare(nameB);
+						if (sortValue === 'name-desc') return nameB.localeCompare(nameA);
+						return 0;
+					});
+
+					grid.innerHTML = '';
+					filteredCards.forEach(card => grid.appendChild(card));
+				}
+
+				searchInput.addEventListener('input', filterAndSort);
+				sortSelect.addEventListener('change', filterAndSort);
+
+				filterBtns.forEach(btn => {
+					btn.addEventListener('click', function() {
+						filterBtns.forEach(b => {
+							b.classList.remove('active', 'bg-white', 'text-black', 'font-bold');
+							b.classList.add('text-text-muted');
+						});
+						this.classList.add('active', 'bg-white', 'text-black', 'font-bold');
+						this.classList.remove('text-text-muted');
+						activeFilter = this.dataset.filter;
+						filterAndSort();
+					});
+				});
+			});
+		</script>
 	</main>
 }

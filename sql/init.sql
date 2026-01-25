@@ -35,3 +35,13 @@ CREATE TABLE IF NOT EXISTS model_info (
     location TEXT,
     total_shots INT DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS portfolio_images (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    profile_id UUID REFERENCES profile(id) ON DELETE CASCADE,
+    image_name TEXT,
+    image_data BYTEA,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_portfolio_profile ON portfolio_images(profile_id);

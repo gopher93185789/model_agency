@@ -1,12 +1,10 @@
 package components
 
-templ TextAreaField(label string, value string, editable bool, placeholder string) {
-	if label != "" {
-		<label class="text-text-muted text-xs uppercase tracking-wider mb-2 block">{ label }</label>
-	}
+templ TextAreaField(name string, placeholder string, value string, editable bool) {
 	if editable {
 		<textarea
-			class="w-full bg-dark border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:border-accent min-h-[100px] resize-none"
+			name={ name }
+			class="w-full bg-bg border border-border rounded px-3 py-2 text-sm text-text focus:outline-none focus:border-accent min-h-[120px] resize-none"
 			placeholder={ placeholder }
 		>{ value }</textarea>
 	} else {

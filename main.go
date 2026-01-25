@@ -374,15 +374,15 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 		p.profile_image_name,
 		p.profile_image_data,
 		p.description,
-		m.location,
-		m.total_shots,
-		m.height,
-		m.bust,
-		m.waist,
-		m.hips
+		COALESCE(m.location, '') as location,
+		COALESCE(m.total_shots, 0) as total_shots,
+		COALESCE(m.height, 0) as height,
+		COALESCE(m.bust, 0) as bust,
+		COALESCE(m.waist, 0) as waist,
+		COALESCE(m.hips, 0) as hips
 	FROM app_users u
 	JOIN profile p ON u.id = p.user_id
-	JOIN model_info m ON p.id = m.id
+	LEFT JOIN model_info m ON p.id = m.id
 	WHERE u.id = $1 AND u.role = 'model'
 	`
 
@@ -390,6 +390,7 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 		info       types.ModelFullInfo
 		imageName  *string
 		imageBytes []byte
+		location   string
 	)
 	err := s.database.QueryRow(context.Background(), q, userid).Scan(
 		&info.UserID,
@@ -398,7 +399,7 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 		&imageName,
 		&imageBytes,
 		&info.Description,
-		&info.Location,
+		&location,
 		&info.TotalShots,
 		&info.Height,
 		&info.Bust,
@@ -410,12 +411,44 @@ func (s *ServerContext) GetModelInfo(userid uuid.UUID) (*types.ModelFullInfo, er
 	}
 
 	info.ProfileImageName = imageName
+	info.Location = &location
 	if len(imageBytes) > 0 {
 		b64 := toBase64(imageBytes)
 		info.ProfileImageBase64 = &b64
 	}
 
 	return &info, nil
+}
+
+func (s *ServerContext) GetPortfolioImages(userID uuid.UUID) ([]types.PortfolioImage, error) {
+	q := `
+	SELECT pi.id, pi.image_data
+	FROM portfolio_images pi
+	JOIN profile p ON pi.profile_id = p.id
+	WHERE p.user_id = $1
+	ORDER BY pi.created_at DESC
+	`
+
+	rows, err := s.database.Query(context.Background(), q, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var images []types.PortfolioImage
+	for rows.Next() {
+		var img types.PortfolioImage
+		var imageData []byte
+		if err := rows.Scan(&img.ID, &imageData); err != nil {
+			continue
+		}
+		if len(imageData) > 0 {
+			img.Base64 = toBase64(imageData)
+		}
+		images = append(images, img)
+	}
+
+	return images, nil
 }
 
 func (s *ServerContext) GetFotograafInfo(userid uuid.UUID) (*types.FotograafInfo, error) {
@@ -506,37 +539,90 @@ func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, e
 func (s *ServerContext) GetModelBySlug(slug string) (*pages.ModelData, error) {
 	q := `
 	SELECT 
+		u.id,
 		u.name,
 		u.school_email,
-		COALESCE(p.description, '') as description
+		COALESCE(p.description, '') as description,
+		COALESCE(encode(p.profile_image_data, 'base64'), '') as profile_image_base64,
+		COALESCE(m.height, 0) as height,
+		COALESCE(m.bust, 0) as bust,
+		COALESCE(m.waist, 0) as waist,
+		COALESCE(m.hips, 0) as hips,
+		COALESCE(m.location, '') as location,
+		COALESCE(m.total_shots, 0) as total_shots
 	FROM app_users u
 	JOIN profile p ON u.id = p.user_id
+	LEFT JOIN model_info m ON p.id = m.id
 	WHERE u.role = 'model' AND LOWER(REPLACE(REPLACE(u.name, ' ', '-'), '.', '')) = $1
 	`
 
-	var name, email, description string
+	var userID uuid.UUID
+	var name, email, description, profileImageBase64, location string
+	var height, bust, waist, hips, totalShots int
 
 	err := s.database.QueryRow(context.Background(), q, slug).Scan(
-		&name, &email, &description,
+		&userID, &name, &email, &description, &profileImageBase64,
+		&height, &bust, &waist, &hips, &location, &totalShots,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	// Fetch portfolio images
+	portfolioImages, _ := s.GetPortfolioImages(userID)
+	var portfolioData []pages.PortfolioItem
+	for _, img := range portfolioImages {
+		portfolioData = append(portfolioData, pages.PortfolioItem{
+			ID:     img.ID.String(),
+			Base64: img.Base64,
+		})
+	}
+
 	return &pages.ModelData{
-		Name:        name,
-		TotalShoots: 0,
-		Email:       email,
-		Location:    "",
-		Bio:         description,
-		Portfolio:   []string{},
+		ProfileImageBase64: profileImageBase64,
+		Name:               name,
+		TotalShoots:        totalShots,
+		Email:              email,
+		Location:           location,
+		Bio:                description,
+		Portfolio:          portfolioData,
 		Measurements: pages.Measurements{
-			Height: "0",
-			Bust:   "0",
-			Waist:  "0",
-			Hips:   "0",
+			Height: fmt.Sprintf("%d", height),
+			Bust:   fmt.Sprintf("%d", bust),
+			Waist:  fmt.Sprintf("%d", waist),
+			Hips:   fmt.Sprintf("%d", hips),
 		},
 		Editable: false,
+	}, nil
+}
+
+func (s *ServerContext) GetFotograafBySlug(slug string) (*pages.FotograafData, error) {
+	q := `
+	SELECT 
+		u.name,
+		u.school_email,
+		COALESCE(p.description, '') as description,
+		COALESCE(encode(p.profile_image_data, 'base64'), '') as profile_image_base64
+	FROM app_users u
+	JOIN profile p ON u.id = p.user_id
+	WHERE u.role = 'fotograaf' AND LOWER(REPLACE(REPLACE(u.name, ' ', '-'), '.', '')) = $1
+	`
+
+	var name, email, description, profileImageBase64 string
+
+	err := s.database.QueryRow(context.Background(), q, slug).Scan(
+		&name, &email, &description, &profileImageBase64,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pages.FotograafData{
+		ProfileImageBase64: profileImageBase64,
+		Name:               name,
+		Email:              email,
+		Bio:                description,
+		Portfolio:          []string{},
 	}, nil
 }
 
@@ -576,23 +662,9 @@ func (s *ServerContext) overviewPage(w http.ResponseWriter, r *http.Request) {
 		page = pages.Docent()
 		s.cache.Set(sid, page, cache.DefaultExpiration)
 	case "model":
-		modelData := pages.ModelData{
-			Name:        "Alex Morgan",
-			TotalShoots: 24,
-			Email:       "alex.morgan@email.com",
-			Location:    "New York, NY",
-			Bio:         "Professional model with 5+ years of experience in fashion, editorial, and commercial photography. Available for studio and outdoor shoots. Portfolio available upon request.",
-			Portfolio:   []string{"", "", "", "", "", ""},
-			Measurements: pages.Measurements{
-				Height: "167",
-				Bust:   "34",
-				Waist:  "24",
-				Hips:   "36",
-			},
-			Editable: true,
-		}
-		page = pages.ModelPublic(modelData)
-		s.cache.Set(sid, page, cache.DefaultExpiration)
+		// Models don't have an overview page, redirect to their private profile
+		http.Redirect(w, r, "/profile", http.StatusSeeOther)
+		return
 	case "fotograaf":
 		// since the model will have multiple db results we can try to implement
 		// https://templ.guide/server-side-rendering/streaming
@@ -630,6 +702,411 @@ func (s *ServerContext) modelPublicPage(w http.ResponseWriter, r *http.Request) 
 	}
 
 	root(pages.ModelPublic(*modelData)).Render(r.Context(), w)
+}
+
+func (s *ServerContext) fotograafPublicPage(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+	if slug == "" {
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	fotograafData, err := s.GetFotograafBySlug(slug)
+	if err != nil {
+		log.Printf("Error fetching fotograaf by slug '%s': %v", slug, err)
+		root(pages.NotFound()).Render(r.Context(), w)
+		return
+	}
+
+	root(pages.FotograafPublic(*fotograafData)).Render(r.Context(), w)
+}
+
+func (s *ServerContext) modelPrivatePage(w http.ResponseWriter, r *http.Request) {
+	sid := r.Header.Get(middlewareToken)
+	if sid == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	claims, err := s.parseToken(sid)
+	if err != nil || claims.Role != "model" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	modelInfo, err := s.GetModelInfo(userID)
+	if err != nil {
+		log.Printf("Error fetching model info: %v", err)
+		root(pages.NotFound()).Render(r.Context(), w)
+		return
+	}
+
+	profileImage := ""
+	if modelInfo.ProfileImageBase64 != nil {
+		profileImage = *modelInfo.ProfileImageBase64
+	}
+
+	description := ""
+	if modelInfo.Description != nil {
+		description = *modelInfo.Description
+	}
+
+	location := ""
+	if modelInfo.Location != nil {
+		location = *modelInfo.Location
+	}
+
+	portfolioImages, _ := s.GetPortfolioImages(userID)
+	var portfolioData []pages.PortfolioItem
+	for _, img := range portfolioImages {
+		portfolioData = append(portfolioData, pages.PortfolioItem{
+			ID:     img.ID.String(),
+			Base64: img.Base64,
+		})
+	}
+
+	modelData := pages.ModelData{
+		ProfileImageBase64: profileImage,
+		Name:               modelInfo.Name,
+		TotalShoots:        modelInfo.TotalShots,
+		Email:              modelInfo.SchoolEmail,
+		Location:           location,
+		Bio:                description,
+		Portfolio:          portfolioData,
+		Measurements: pages.Measurements{
+			Height: fmt.Sprintf("%d", modelInfo.Height),
+			Bust:   fmt.Sprintf("%d", modelInfo.Bust),
+			Waist:  fmt.Sprintf("%d", modelInfo.Waist),
+			Hips:   fmt.Sprintf("%d", modelInfo.Hips),
+		},
+		Editable: true,
+	}
+
+	root(pages.ModelPrivate(modelData)).Render(r.Context(), w)
+}
+
+func (s *ServerContext) fotograafPrivatePage(w http.ResponseWriter, r *http.Request) {
+	sid := r.Header.Get(middlewareToken)
+	if sid == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	claims, err := s.parseToken(sid)
+	if err != nil || claims.Role != "fotograaf" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	fotograafInfo, err := s.GetFotograafInfo(userID)
+	if err != nil {
+		log.Printf("Error fetching fotograaf info: %v", err)
+		root(pages.NotFound()).Render(r.Context(), w)
+		return
+	}
+
+	profileImage := ""
+	if fotograafInfo.ProfileImageBase64 != nil {
+		profileImage = *fotograafInfo.ProfileImageBase64
+	}
+
+	description := ""
+	if fotograafInfo.Description != nil {
+		description = *fotograafInfo.Description
+	}
+
+	fotograafData := pages.FotograafData{
+		ProfileImageBase64: profileImage,
+		Name:               fotograafInfo.Name,
+		Email:              fotograafInfo.SchoolEmail,
+		Bio:                description,
+		Portfolio:          []string{},
+	}
+
+	root(pages.FotograafPrivate(fotograafData)).Render(r.Context(), w)
+}
+
+func (s *ServerContext) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sid := r.Header.Get(middlewareToken)
+	if sid == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	claims, err := s.parseToken(sid)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Redirect(w, r, "/profile?err=Failed+to+parse+form", http.StatusSeeOther)
+		return
+	}
+
+	role := r.FormValue("role")
+	bio := r.FormValue("bio")
+
+	q := `UPDATE profile SET description = $2 WHERE user_id = $1`
+	_, err = s.database.Exec(ctx, q, userID, bio)
+	if err != nil {
+		log.Printf("Failed to update profile: %v", err)
+		http.Redirect(w, r, "/profile?err=Failed+to+update+profile", http.StatusSeeOther)
+		return
+	}
+
+	imageFile, _, err := r.FormFile("profile_image")
+	if err == nil {
+		defer imageFile.Close()
+		imageData, err := io.ReadAll(imageFile)
+		if err == nil && len(imageData) > 0 {
+			mime := http.DetectContentType(imageData)
+			if strings.HasPrefix(mime, "image/") {
+				randomName, _ := randomImageName()
+				q := `UPDATE profile SET profile_image_name = $2, profile_image_data = $3 WHERE user_id = $1`
+				s.database.Exec(ctx, q, userID, randomName, imageData)
+			}
+		}
+	}
+
+	if role == "model" {
+		location := r.FormValue("location")
+		height := r.FormValue("height")
+		bust := r.FormValue("bust")
+		waist := r.FormValue("waist")
+		hips := r.FormValue("hips")
+
+		var profileID uuid.UUID
+		err := s.database.QueryRow(ctx, `SELECT id FROM profile WHERE user_id = $1`, userID).Scan(&profileID)
+		if err != nil {
+			log.Printf("Failed to get profile ID: %v", err)
+			http.Redirect(w, r, "/profile?err=Failed+to+update+profile", http.StatusSeeOther)
+			return
+		}
+
+		var exists bool
+		err = s.database.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM model_info WHERE id = $1)`, profileID).Scan(&exists)
+		if err != nil {
+			log.Printf("Failed to check model_info: %v", err)
+		}
+
+		if exists {
+			q := `UPDATE model_info SET height = $2, bust = $3, waist = $4, hips = $5, location = $6 WHERE id = $1`
+			_, err = s.database.Exec(ctx, q, profileID, height, bust, waist, hips, location)
+		} else {
+			q := `INSERT INTO model_info (id, height, bust, waist, hips, location) VALUES ($1, $2, $3, $4, $5, $6)`
+			_, err = s.database.Exec(ctx, q, profileID, height, bust, waist, hips, location)
+		}
+		if err != nil {
+			log.Printf("Failed to update model_info: %v", err)
+		}
+	}
+
+	s.cache.Delete(sid)
+
+	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+}
+
+func (s *ServerContext) DeleteProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sid := r.Header.Get(middlewareToken)
+	if sid == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	claims, err := s.parseToken(sid)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	q := `DELETE FROM app_users WHERE id = $1`
+	_, err = s.database.Exec(ctx, q, userID)
+	if err != nil {
+		log.Printf("Failed to delete user: %v", err)
+		http.Redirect(w, r, "/profile?err=Failed+to+delete+account", http.StatusSeeOther)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     sessionCookieName,
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		Secure:   true,
+		Path:     "/",
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	s.cache.Delete(sid)
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (s *ServerContext) UploadPortfolioImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sid := r.Header.Get(middlewareToken)
+	if sid == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	claims, err := s.parseToken(sid)
+	if err != nil || claims.Role != "model" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Redirect(w, r, "/profile?err=Failed+to+parse+form", http.StatusSeeOther)
+		return
+	}
+
+	var profileID uuid.UUID
+	err = s.database.QueryRow(ctx, `SELECT id FROM profile WHERE user_id = $1`, userID).Scan(&profileID)
+	if err != nil {
+		log.Printf("Failed to get profile ID: %v", err)
+		http.Redirect(w, r, "/profile?err=Failed+to+upload+image", http.StatusSeeOther)
+		return
+	}
+
+	imageFile, _, err := r.FormFile("portfolio_image")
+	if err != nil {
+		http.Redirect(w, r, "/profile?err=No+image+selected", http.StatusSeeOther)
+		return
+	}
+	defer imageFile.Close()
+
+	imageData, err := io.ReadAll(imageFile)
+	if err != nil || len(imageData) == 0 {
+		http.Redirect(w, r, "/profile?err=Failed+to+read+image", http.StatusSeeOther)
+		return
+	}
+
+	mime := http.DetectContentType(imageData)
+	if !strings.HasPrefix(mime, "image/") {
+		http.Redirect(w, r, "/profile?err=Invalid+image+type", http.StatusSeeOther)
+		return
+	}
+
+	randomName, _ := randomImageName()
+	q := `INSERT INTO portfolio_images (profile_id, image_name, image_data) VALUES ($1, $2, $3)`
+	_, err = s.database.Exec(ctx, q, profileID, randomName, imageData)
+	if err != nil {
+		log.Printf("Failed to insert portfolio image: %v", err)
+		http.Redirect(w, r, "/profile?err=Failed+to+upload+image", http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+}
+
+func (s *ServerContext) DeletePortfolioImage(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sid := r.Header.Get(middlewareToken)
+	if sid == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	claims, err := s.parseToken(sid)
+	if err != nil || claims.Role != "model" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	userID, err := uuid.Parse(claims.UserID)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Redirect(w, r, "/profile?err=Failed+to+parse+form", http.StatusSeeOther)
+		return
+	}
+
+	imageID := r.FormValue("image_id")
+	if imageID == "" {
+		http.Redirect(w, r, "/profile?err=No+image+specified", http.StatusSeeOther)
+		return
+	}
+
+	imageUUID, err := uuid.Parse(imageID)
+	if err != nil {
+		http.Redirect(w, r, "/profile?err=Invalid+image+id", http.StatusSeeOther)
+		return
+	}
+
+	q := `DELETE FROM portfolio_images WHERE id = $1 AND profile_id IN (SELECT id FROM profile WHERE user_id = $2)`
+	result, err := s.database.Exec(ctx, q, imageUUID, userID)
+	if err != nil {
+		log.Printf("Failed to delete portfolio image: %v", err)
+		http.Redirect(w, r, "/profile?err=Failed+to+delete+image", http.StatusSeeOther)
+		return
+	}
+
+	if result.RowsAffected() == 0 {
+		http.Redirect(w, r, "/profile?err=Image+not+found", http.StatusSeeOther)
+		return
+	}
+
+	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+}
+
+func (s *ServerContext) profilePage(w http.ResponseWriter, r *http.Request) {
+	sid := r.Header.Get(middlewareToken)
+	if sid == "" {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	claims, err := s.parseToken(sid)
+	if err != nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	switch claims.Role {
+	case "model":
+		s.modelPrivatePage(w, r)
+	case "fotograaf":
+		s.fotograafPrivatePage(w, r)
+	default:
+		http.Redirect(w, r, "/overview", http.StatusSeeOther)
+	}
 }
 
 func (s *ServerContext) LoginPage(w http.ResponseWriter, r *http.Request) {
@@ -678,6 +1155,7 @@ func main() {
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) { root(pages.Home()).Render(r.Context(), w) })
 	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewPage))
 	mux.HandleFunc("GET /model/{slug}", sctx.modelPublicPage)
+	mux.HandleFunc("GET /fotograaf/{slug}", sctx.fotograafPublicPage)
 
 	staticSubFS, err := fs.Sub(staticFs, "public")
 	if err != nil {
@@ -686,11 +1164,16 @@ func main() {
 	mux.Handle("GET /public/", http.StripPrefix("/public/", http.FileServerFS(staticSubFS)))
 	mux.HandleFunc("GET /login", sctx.LoginPage)
 	mux.HandleFunc("GET /signup", sctx.SignupPage)
+	mux.HandleFunc("GET /profile", sctx.AuthMiddleware(sctx.profilePage))
 
 	// api
 	mux.HandleFunc("POST /api/login", sctx.Login)
 	mux.HandleFunc("POST /api/signup", sctx.Signup)
 	mux.HandleFunc("POST /api/logout", sctx.AuthMiddleware(sctx.Logout))
+	mux.HandleFunc("POST /api/profile/update", sctx.AuthMiddleware(sctx.UpdateProfile))
+	mux.HandleFunc("POST /api/profile/delete", sctx.AuthMiddleware(sctx.DeleteProfile))
+	mux.HandleFunc("POST /api/portfolio/upload", sctx.AuthMiddleware(sctx.UploadPortfolioImage))
+	mux.HandleFunc("POST /api/portfolio/delete", sctx.AuthMiddleware(sctx.DeletePortfolioImage))
 
 	srv := &http.Server{
 		Addr:    ":42069",

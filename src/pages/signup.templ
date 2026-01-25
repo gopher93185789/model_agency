@@ -1,94 +1,145 @@
 package pages
 
-import "github.com/gopher93185789/model_agency/src/components"
-
 templ Signup(errMsg string) {
-	<div class="w-full min-h-screen flex flex-col items-center justify-center p-5">
-		@components.HomeIcon()
-		<form method="POST" action="/api/signup" enctype="multipart/form-data" class="flex flex-col gap-6 w-full max-w-md">
-			<h2 class="text-4xl font-bold text-text uppercase tracking-tight mb-8 text-center">Join Our Agency</h2>
-			if errMsg != "" {
-				<div class="px-4 py-3 bg-red-900/20 border border-red-500 rounded-sm text-red-400 text-sm">
-					{ errMsg }
+	<main class="min-h-screen bg-bg-dark flex">
+		<div class="hidden lg:block w-1/2 border-r border-border relative overflow-hidden">
+			<div class="absolute inset-0 flex items-end p-12">
+				<span class="text-text-muted text-[30rem] font-black uppercase opacity-5 leading-none">G</span>
+			</div>
+		</div>
+
+		<div class="w-full lg:w-1/2 flex flex-col">
+			<header class="border-b border-border">
+				<div class="flex items-center justify-between py-6 px-8">
+					<a href="/" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
+						← Home
+					</a>
+					<span class="text-text-muted uppercase tracking-wider text-sm">Registreren</span>
 				</div>
-			}
-			@components.Input("School Email", "text", "school_email", "Enter your student email", true)
-			@components.Input("Name", "text", "name", "Enter your name", true)
-			@components.Input("Password", "password", "password", "Enter your password", true)
-			<div class="flex flex-col gap-2">
-				<label class="text-sm text-text-muted uppercase tracking-wide">Profile Image (optional)</label>
-				<script>
-					function fileHandler() {
-						return {
-							name: "No file chosen",
-							labelName: "Select Image",
-							hasImage: false,
-							handleChange() {
-								const file = this.$refs.fileInput.files[0];
-								if (file) {
-									this.name = file.name;
-									this.labelName = "Change Image";
-									this.hasImage = true;
-								} else {
-									this.name = "No file chosen";
-									this.labelName = "Select Image";
-									this.hasImage = false;
-								}
-							},
-							clearFile() {
-								this.$refs.fileInput.value = null;
-								this.name = "No file chosen";
-								this.labelName = "Select Image";
-								this.hasImage = false;
-							}
-						}
+			</header>
+
+			<div class="flex-1 flex items-center justify-center p-8">
+				<form method="POST" action="/api/signup" enctype="multipart/form-data" class="w-full max-w-md">
+					<h1 class="text-5xl md:text-6xl font-black text-text uppercase tracking-tighter mb-2">Word Lid</h1>
+					<p class="text-text-muted uppercase tracking-wider text-sm mb-12">Van Ons Agency</p>
+					
+					if errMsg != "" {
+						<div class="border border-red-500 text-red-400 text-sm p-4 mb-8 uppercase tracking-wider">
+							{ errMsg }
+						</div>
 					}
-				</script>
-				<div x-data="fileHandler()" class="flex items-center gap-3">
-					<input
-						x-ref="fileInput"
-						type="file"
-						name="profile_image"
-						accept="image/*"
-						id="profileImage"
-						class="hidden"
-						@change="handleChange()"
-					/>
-					<label
-						:text="labelName"
-						for="profileImage"
-						class="px-4 py-2 border border-border text-text rounded-sm cursor-pointer transition-colors"
-						x-text="labelName"
-					>
-						Select Image
-					</label>
-					<span class="text-text-muted italic" x-text="name"></span>
-					<button class="text-text cursor-pointer" x-show="hasImage" @click="clearFile()">
-						<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-						</svg>
+					
+					<div class="space-y-6">
+						<div>
+							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">School Email</label>
+							<input 
+								type="text" 
+								name="school_email" 
+								placeholder="Enter your student email"
+								required
+								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+							/>
+						</div>
+						<div>
+							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Naam</label>
+							<input 
+								type="text" 
+								name="name" 
+								placeholder="Enter your name"
+								required
+								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+							/>
+						</div>
+						<div>
+							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Wachtwoord</label>
+							<input 
+								type="password" 
+								name="password" 
+								placeholder="Enter your password"
+								required
+								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+							/>
+						</div>
+						<div>
+							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Profielfoto (optioneel)</label>
+							<script>
+								function fileHandler() {
+									return {
+										name: "Geen bestand gekozen",
+										labelName: "Selecteer",
+										hasImage: false,
+										handleChange() {
+											const file = this.$refs.fileInput.files[0];
+											if (file) {
+												this.name = file.name;
+												this.labelName = "Wijzig";
+												this.hasImage = true;
+											} else {
+												this.name = "Geen bestand gekozen";
+												this.labelName = "Selecteer";
+												this.hasImage = false;
+											}
+										},
+										clearFile() {
+											this.$refs.fileInput.value = null;
+											this.name = "Geen bestand gekozen";
+											this.labelName = "Selecteer";
+											this.hasImage = false;
+										}
+									}
+								}
+							</script>
+							<div x-data="fileHandler()" class="flex items-center gap-4 mt-2">
+								<input
+									x-ref="fileInput"
+									type="file"
+									name="profile_image"
+									accept="image/*"
+									id="profileImage"
+									class="hidden"
+									@change="handleChange()"
+								/>
+								<label
+									for="profileImage"
+									class="border border-border text-text px-4 py-2 uppercase tracking-wider text-xs cursor-pointer hover:bg-text hover:text-bg-dark transition-colors"
+									x-text="labelName"
+								>
+									Selecteer
+								</label>
+								<span class="text-text-muted text-sm" x-text="name"></span>
+								<button type="button" class="text-text-muted hover:text-text cursor-pointer" x-show="hasImage" @click="clearFile()">
+									<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+									</svg>
+								</button>
+							</div>
+						</div>
+						<div>
+							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Rol</label>
+							<select
+								name="role"
+								required
+								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors cursor-pointer"
+							>
+								<option value="" disabled selected class="bg-bg-dark text-text-muted">Selecteer je rol</option>
+								<option value="fotograaf" class="bg-bg-dark text-text">Fotograaf</option>
+								<option value="model" class="bg-bg-dark text-text">Model</option>
+							</select>
+						</div>
+					</div>
+
+					<button type="submit" class="w-full bg-text text-bg-dark py-4 mt-12 uppercase tracking-wider text-sm font-bold hover:bg-text/90 transition-colors">
+						Begin je Reis
 					</button>
-				</div>
+
+					<p class="text-center text-text-muted mt-8 uppercase tracking-wider text-sm">
+						Al een account? 
+						<a href="/login" class="text-text hover:underline ml-2">Inloggen</a>
+					</p>
+				</form>
 			</div>
-			<div class="flex flex-col gap-2">
-				<label class="text-sm text-text-muted uppercase tracking-wide">Role</label>
-				<select
-					name="role"
-					required
-					class="px-4 py-3 border border-border rounded-sm text-text focus:outline-none focus:border-accent transition-colors duration-200 cursor-pointer"
-				>
-					<option value="" disabled selected class="text-text-muted-extra">Select your role</option>
-					<option value="fotograaf" class="bg-bg-light text-text">Fotograaf</option>
-					<option value="model" class="bg-bg-light text-text">Model</option>
-				</select>
-			</div>
-			@components.SubmitButton("Begin Your Journey")
-			<p class="text-center text-sm text-text-muted mt-4">
-				Already have an account? 
-				<a href="/login" class="text-accent hover:text-accent-hover underline transition-colors duration-200">Login</a>
-			</p>
-		</form>
-	</div>
+		</div>
+	</main>
 	if errMsg != "" {
 		<script>
 			if (window.location.search.includes('err=')) {

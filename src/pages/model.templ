@@ -7,13 +7,19 @@ type Measurements struct {
 	Hips   string
 }
 
+type PortfolioItem struct {
+	ID     string
+	Base64 string
+}
+
 type ModelData struct {
+	ProfileImageBase64 string
 	Name         string
 	TotalShoots  int
 	Email        string
 	Location     string
 	Bio          string
-	Portfolio    []string
+	Portfolio    []PortfolioItem
 	Measurements Measurements
 	Editable     bool
 }

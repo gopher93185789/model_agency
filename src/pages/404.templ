@@ -1,6 +1,15 @@
 package pages
 
-
 templ NotFound() {
-    <p class="text-text text-2xl font-bold">404 - Page Not Found</p>
+	<main class="min-h-screen bg-bg-dark flex items-center justify-center">
+		<div class="text-center">
+			<h1 class="text-[15rem] md:text-[20rem] font-black text-text uppercase tracking-tighter leading-none opacity-10">404</h1>
+			<div class="mt-[-4rem] relative z-10">
+				<p class="text-text-muted uppercase tracking-wider text-sm mb-8">Pagina Niet Gevonden</p>
+				<a href="/" class="inline-block border border-text text-text px-8 py-4 uppercase tracking-wider text-sm hover:bg-text hover:text-bg-dark transition-colors">
+					Terug naar Home
+				</a>
+			</div>
+		</div>
+	</main>
 }

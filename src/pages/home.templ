@@ -1,46 +1,58 @@
 package pages
 
-import "github.com/gopher93185789/model_agency/src/components"
-
 templ Home() {
-	<div class="w-full h-screen flex flex-col">
-		<div id="navbar" class="w-full text-xl text-text leading-relaxed uppercase flex flex-row justify-between p-5 flex-none">
-			<a href="/models" class="hover:underline duration-200 ease-in-out cursor-pointer">models</a>
-			<h1 class="hover:underline duration-200 ease-in-out cursor-pointer">Grafisch</h1>
-			<a href="/login" class="hover:underline duration-200 ease-in-out cursor-pointer">Login</a>
-		</div>
-		<div class="w-full flex flex-row grow overflow-hidden pt-10">
-			<div id="model" class="w-fit flex flex-row gap-2 h-full overflow-hidden">
-				@components.BigText("GR")
-				<img src="/public/model2.jpg" class="w-auto h-full pb-2" alt="Model"/>
+	<main class="min-h-screen bg-bg-dark">
+		<header class="border-b border-border">
+			<nav class="flex items-center justify-between py-6 px-8">
+				<a href="/overview" class="text-text hover:text-text-muted transition-colors uppercase tracking-wider text-sm">Models</a>
+				<h1 class="text-text font-black uppercase tracking-tighter text-xl">Grafisch</h1>
+				<a href="/login" class="text-text hover:text-text-muted transition-colors uppercase tracking-wider text-sm">Login</a>
+			</nav>
+		</header>
+
+		<div class="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-80px)]">
+			<div class="border-r border-border relative overflow-hidden">
+				<img src="/public/model2.jpg" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Model"/>
+				<div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-bg-dark to-transparent">
+					<span class="text-[12rem] md:text-[16rem] font-black text-text uppercase leading-none tracking-tighter opacity-90">GR</span>
+				</div>
 			</div>
-			<div class="flex flex-col items-start justify-end pl-2 grow overflow-hidden">
-				<p class="text-base text-text leading-relaxed uppercase">
-					Grafisch is a student-run
-					<br/>
-					modeling agency at Grafisch Lyceum
-					<br/>
-					Rotterdam, dedicated to fostering
-					<br/>
-					creativity, diversity, and inclusivity.
-					<br/>
-					We provide emerging talent with
-					<br/>
-					opportunities to shine and connect
-					<br/>
-					with a vibrant, supportive community.
-				</p>
-				<p class="text-base text-text leading-relaxed uppercase mt-10 font-bold">Graphic Lyceum</p>
-				<p class="text-base text-text leading-relaxed uppercase">
-					Rotterdam Heer Bokelweg 255
-					<br/>
-					Third Floor
-				</p>
-				<p class="text-base text-text leading-relaxed uppercase mt-10 font-bold">Contact</p>
-				<p class="text-base text-text leading-relaxed">+31 (6) 28 51 07 93</p>
-				<a href="mailto:info@grafischmodels.com" target="_blank" class="text-base text-text leading-relaxed underline">info@grafischmodels.com</a>
-				@components.BigText("SCH")
+
+			<div class="flex flex-col">
+				<div class="flex-1 flex items-end p-8 lg:p-12">
+					<div>
+						<p class="text-text uppercase tracking-wider text-sm leading-relaxed max-w-md">
+							Grafisch is a student-run
+							modeling agency at Grafisch Lyceum
+							Rotterdam, dedicated to fostering
+							creativity, diversity, and inclusivity.
+							We provide emerging talent with
+							opportunities to shine and connect
+							with a vibrant, supportive community.
+						</p>
+					</div>
+				</div>
+
+				<div class="border-t border-border">
+					<div class="grid grid-cols-2">
+						<div class="p-8 border-r border-border">
+							<h3 class="text-text-muted uppercase tracking-wider text-xs mb-4">Locatie</h3>
+							<p class="text-text uppercase tracking-wide text-sm">Graphic Lyceum</p>
+							<p class="text-text-muted uppercase tracking-wide text-sm">Rotterdam Heer Bokelweg 255</p>
+							<p class="text-text-muted uppercase tracking-wide text-sm">Derde Verdieping</p>
+						</div>
+						<div class="p-8">
+							<h3 class="text-text-muted uppercase tracking-wider text-xs mb-4">Contact</h3>
+							<p class="text-text uppercase tracking-wide text-sm">+31 (6) 28 51 07 93</p>
+							<a href="mailto:info@grafischmodels.com" target="_blank" class="text-text hover:underline uppercase tracking-wide text-sm">info@grafischmodels.com</a>
+						</div>
+					</div>
+				</div>
+
+				<div class="border-t border-border p-8 flex items-center justify-end">
+					<span class="text-[8rem] md:text-[12rem] font-black text-text uppercase leading-none tracking-tighter opacity-90">SCH</span>
+				</div>
 			</div>
 		</div>
-	</div>
+	</main>
 }

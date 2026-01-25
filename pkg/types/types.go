@@ -71,3 +71,8 @@ type ModelOverviewInfo struct {
 	ProfileImageName   *string   `json:"profile_image_name" db:"profile_image_name"`
 	ProfileImageBase64 *string   `json:"profile_image_base64" db:"profile_image_base64"`
 }
+
+type PortfolioImage struct {
+	ID     uuid.UUID `json:"id" db:"id"`
+	Base64 string    `json:"base64"`
+}
