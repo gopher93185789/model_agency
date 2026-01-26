@@ -1,58 +1,296 @@
 package pages
 
 templ Home() {
-	<main class="min-h-screen bg-bg-dark">
-		<header class="border-b border-border">
-			<nav class="flex items-center justify-between py-6 px-8">
-				<a href="/overview" class="text-text hover:text-text-muted transition-colors uppercase tracking-wider text-sm">Models</a>
-				<h1 class="text-text font-black uppercase tracking-tighter text-xl">Grafisch</h1>
-				<a href="/login" class="text-text hover:text-text-muted transition-colors uppercase tracking-wider text-sm">Login</a>
-			</nav>
-		</header>
+    <main class="w-full bg-[#070707] min-h-screen text-[#f5f5f5] selection:bg-white selection:text-black font-['Inter'] overflow-x-hidden">
+        
+        <nav id="navbar" class="fixed top-0 left-0 w-full z-50 py-8 border-b border-white/5 transition-all duration-500 animate-nav">
+            <div class="container mx-auto px-6 flex justify-between items-center text-white">
+                <a href="/models" class="hover-line text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
+                    Models
+                </a>
+                
+                <a href="/" id="nav-title" class="font-['Syne'] font-bold uppercase tracking-tighter transition-all duration-500 text-3xl md:text-4xl origin-center">
+                    Grafisch
+                </a>
 
-		<div class="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-80px)]">
-			<div class="border-r border-border relative overflow-hidden">
-				<img src="/public/model2.jpg" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Model"/>
-				<div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-bg-dark to-transparent">
-					<span class="text-[12rem] md:text-[16rem] font-black text-text uppercase leading-none tracking-tighter opacity-90">GR</span>
-				</div>
-			</div>
+                <a href="/login" class="hover-line text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
+                    Login
+                </a>
+            </div>
+        </nav>
 
-			<div class="flex flex-col">
-				<div class="flex-1 flex items-end p-8 lg:p-12">
-					<div>
-						<p class="text-text uppercase tracking-wider text-sm leading-relaxed max-w-md">
-							Grafisch is a student-run
-							modeling agency at Grafisch Lyceum
-							Rotterdam, dedicated to fostering
-							creativity, diversity, and inclusivity.
-							We provide emerging talent with
-							opportunities to shine and connect
-							with a vibrant, supportive community.
-						</p>
-					</div>
-				</div>
+        <section class="relative w-full h-[100dvh] flex flex-col items-center justify-center overflow-hidden">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-800/20 via-[#070707] to-[#070707] -z-10"></div>
+            
+            <div class="container mx-auto px-4 h-full relative z-10">
+                <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] h-full items-center">
+                    
+                    <div class="hidden md:flex flex-col items-end justify-center animate-text-left pr-6" style="animation-delay: 0.3s;">
+                        <span class="font-['Syne'] font-extrabold text-[clamp(4rem,14vw,140px)] leading-[0.8] text-white tracking-tighter select-none mix-blend-exclusion hover:skew-x-3 transition-transform duration-700 cursor-default">
+                            GRA
+                        </span>
+                        <div class="flex flex-row items-center gap-4 mt-4 mr-2 opacity-60">
+                             <span class="hidden lg:block text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-medium">Est. 2024</span>
+                             <div class="h-[1px] w-12 bg-zinc-600"></div> 
+                        </div>
+                    </div>
 
-				<div class="border-t border-border">
-					<div class="grid grid-cols-2">
-						<div class="p-8 border-r border-border">
-							<h3 class="text-text-muted uppercase tracking-wider text-xs mb-4">Locatie</h3>
-							<p class="text-text uppercase tracking-wide text-sm">Graphic Lyceum</p>
-							<p class="text-text-muted uppercase tracking-wide text-sm">Rotterdam Heer Bokelweg 255</p>
-							<p class="text-text-muted uppercase tracking-wide text-sm">Derde Verdieping</p>
-						</div>
-						<div class="p-8">
-							<h3 class="text-text-muted uppercase tracking-wider text-xs mb-4">Contact</h3>
-							<p class="text-text uppercase tracking-wide text-sm">+31 (6) 28 51 07 93</p>
-							<a href="mailto:info@grafischmodels.com" target="_blank" class="text-text hover:underline uppercase tracking-wide text-sm">info@grafischmodels.com</a>
-						</div>
-					</div>
-				</div>
+                    <div class="flex flex-col items-center justify-center z-10">
+                        <div class="relative w-full max-w-[30vw] h-[50vh] md:h-[65vh] mx-auto flex justify-center items-center animate-image" style="animation-delay: 0.1s;">
+                            <div class="md:hidden absolute -top-20 z-20">
+                                <span class="font-['Syne'] font-extrabold text-[18vw] leading-none tracking-tighter">GRAFISCH</span>
+                            </div>
 
-				<div class="border-t border-border p-8 flex items-center justify-end">
-					<span class="text-[8rem] md:text-[12rem] font-black text-text uppercase leading-none tracking-tighter opacity-90">SCH</span>
-				</div>
-			</div>
-		</div>
-	</main>
+                            <div class="relative w-full h-full overflow-hidden group">
+                                <img 
+                                    src="/public/model.jpg" 
+                                    alt="Featured Model" 
+                                    class="w-full h-full object-cover grayscale contrast-110 brightness-90 transition-all duration-[1.5s] ease-out group-hover:grayscale-0 group-hover:scale-105"
+                                />
+                                <div class="absolute inset-0 border border-white/10 pointer-events-none z-30 transition-opacity duration-500 group-hover:border-white/30"></div>
+                                
+                                <div class="absolute bottom-6 w-full flex justify-center z-40 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+                                     <span class="text-[10px] uppercase tracking-[0.25em] bg-black/60 backdrop-blur-md px-3 py-1.5 text-white border border-white/10">
+                                        Vogue Collection
+                                     </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-row gap-6 mt-8 animate-fade-in-up" style="animation-delay: 0.5s;">
+                            <a href="/models" class="text-xs uppercase tracking-[0.2em] text-white border-b border-white/20 pb-1 hover:border-white transition-all">View Models</a>
+                            <a href="/apply" class="text-xs uppercase tracking-[0.2em] text-zinc-500 border-b border-transparent pb-1 hover:text-white hover:border-white transition-all">Apply</a>
+                        </div>
+                    </div>
+
+                    <div class="hidden md:flex flex-col items-start justify-center animate-text-right" style="animation-delay: 0.4s;">
+                        <span class="font-['Syne'] font-extrabold text-[clamp(4rem,14vw,140px)] leading-[0.8] text-white tracking-tighter select-none mix-blend-exclusion hover:-skew-x-3 transition-transform duration-700 cursor-default">
+                            ISCH
+                        </span>
+                        <div class="flex flex-row items-center gap-4 mt-4 ml-2 opacity-60">
+                            <div class="h-[1px] w-12 bg-zinc-600"></div>
+                            <span class="text-[10px] uppercase tracking-[0.3em] text-zinc-500 font-medium">Rotterdam</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-nav" style="animation-delay: 1.5s;">
+                <div class="w-[1px] h-16 bg-gradient-to-b from-transparent via-zinc-500 to-transparent opacity-50"></div>
+            </div>
+        </section>
+
+        <!-- Social Proof (Marquee) -->
+        <section class="w-full bg-[#0a0a0a] border-t border-white/5 py-12 border-b border-white/5 overflow-hidden group">
+            <div class="relative w-full max-w-[100vw] overflow-hidden">
+                <!-- Fade Masks -->
+                <div class="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
+                <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#0a0a0a] to-transparent z-10 pointer-events-none"></div>
+                
+                <!-- Marquee Container -->
+                <div class="animate-marquee flex whitespace-nowrap group-hover:[animation-play-state:paused] items-center">
+                    
+                    <!-- Content Block 1 (Original) -->
+                    <div class="flex items-center gap-16 md:gap-32 pr-16 md:pr-32">
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">VOGUE</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">ELLE</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Harper's Bazaar</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">L'Officiel</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Numéro</span>
+                         <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">i-D</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Dazed</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">W Magazine</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">GQ</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Vanity Fair</span>
+                    </div>
+
+                    <!-- Content Block 2 (Duplicate for Loop) -->
+                    <div class="flex items-center gap-16 md:gap-32 pr-16 md:pr-32" aria-hidden="true">
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">VOGUE</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">ELLE</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Harper's Bazaar</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">L'Officiel</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Numéro</span>
+                         <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">i-D</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Dazed</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">W Magazine</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">GQ</span>
+                        <span class="font-['Syne'] text-lg md:text-xl font-bold uppercase tracking-wider text-zinc-600 hover:text-white transition-colors cursor-default">Vanity Fair</span>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <section class="w-full bg-[#0a0a0a] py-32 relative border-t border-white/5">
+            <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16">
+                
+                <div class="hidden lg:flex lg:col-span-2 flex-col justify-between h-full border-r border-white/5 pr-8 py-4 opacity-50 reveal-on-scroll">
+                    <span class="text-[10px] uppercase rotate-180 writing-vertical-rl tracking-[0.3em] text-zinc-500 font-medium mix-blend-plus-lighter" style="writing-mode: vertical-rl;">
+                        Inclusivity & Diversity
+                    </span>
+                </div>
+
+                <div class="lg:col-span-8 lg:pl-12 flex flex-col justify-center">
+                    <h2 class="font-['Syne'] text-3xl md:text-5xl lg:text-6xl font-normal leading-[1.1] text-zinc-500 mb-12 reveal-on-scroll">
+                        <span class="text-white font-bold">Grafisch</span> is a student-run agency at <span class="text-white italic font-serif">Grafisch Lyceum</span>.
+                    </h2>
+                    
+                    <div class="space-y-8 text-lg md:text-xl text-zinc-500 font-light max-w-2xl leading-relaxed reveal-on-scroll" style="transition-delay: 100ms;">
+                        <p>
+                            We respect the hustle. We embrace the weird. Dedicated to fostering <span class="text-zinc-200 font-medium">creativity</span> and <span class="text-zinc-200 font-medium">authenticity</span>. 
+                            Moving beyond traditional beauty standards to find raw talent.
+                        </p>
+                    </div>
+                    
+                    <div class="mt-24 reveal-on-scroll" style="transition-delay: 200ms;">
+                        <a href="mailto:info@grafischmodels.com" class="group inline-flex items-center gap-6 text-white uppercase tracking-[0.2em] text-xs border-b border-zinc-800 pb-4 hover:border-white transition-all duration-500">
+                            Collaborate with us
+                            <span class="group-hover:translate-x-2 transition-transform duration-500 text-lg font-serif italic">&rarr;</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Models Preview Grid -->
+        <section class="w-full bg-[#0a0a0a] py-24 border-t border-white/5">
+            <div class="container mx-auto px-6">
+                 <div class="flex justify-between items-end mb-16 reveal-on-scroll">
+                    <h2 class="font-['Syne'] text-3xl md:text-5xl font-bold text-white uppercase tracking-tighter">New Faces</h2>
+                    <a href="/models" class="hidden md:block text-xs uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-colors">View All</a>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
+                    <!-- Card 1 -->
+                    <a href="/models/anna" class="group block cursor-pointer reveal-on-scroll">
+                        <div class="relative w-full aspect-[3/4] overflow-hidden bg-zinc-900 mb-4">
+                            <img src="/public/model.jpg" class="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105" alt="Anna" />
+                            <div class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <span class="bg-white text-black text-[10px] uppercase font-bold px-2 py-1 tracking-widest">New Face</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-2 group-hover:border-white transition-colors duration-300">
+                            <span class="font-['Syne'] text-xl text-white uppercase">Anna</span>
+                            <span class="text-xs text-zinc-500 font-mono">178cm</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 2 -->
+                    <a href="/models/dave" class="group block cursor-pointer reveal-on-scroll" style="transition-delay: 100ms;">
+                        <div class="relative w-full aspect-[3/4] overflow-hidden bg-zinc-900 mb-4">
+                            <img src="/public/model3.jpg" class="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105" alt="Dave" />
+                            <div class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <span class="bg-white text-black text-[10px] uppercase font-bold px-2 py-1 tracking-widest">Editorial</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-2 group-hover:border-white transition-colors duration-300">
+                            <span class="font-['Syne'] text-xl text-white uppercase">Dave</span>
+                            <span class="text-xs text-zinc-500 font-mono">185cm</span>
+                        </div>
+                    </a>
+
+                    <!-- Card 3 -->
+                    <a href="/models/sara" class="group block cursor-pointer reveal-on-scroll" style="transition-delay: 200ms;">
+                        <div class="relative w-full aspect-[3/4] overflow-hidden bg-zinc-900 mb-4">
+                            <img src="/public/model2.jpg" class="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-105" alt="Sara" />
+                             <div class="absolute bottom-4 left-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <span class="bg-white text-black text-[10px] uppercase font-bold px-2 py-1 tracking-widest">Vogue</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center border-b border-zinc-800 pb-2 group-hover:border-white transition-colors duration-300">
+                            <span class="font-['Syne'] text-xl text-white uppercase">Sara</span>
+                            <span class="text-xs text-zinc-500 font-mono">176cm</span>
+                        </div>
+                    </a>
+                </div>
+                 
+                 <div class="mt-12 md:hidden flex justify-center">
+                    <a href="/models" class="text-xs uppercase tracking-[0.2em] text-zinc-500 hover:text-white transition-colors">View All Models</a>
+                 </div>
+            </div>
+        </section>
+
+        <footer id="contact" class="w-full bg-black text-white pt-32 pb-12 border-t border-white/5 relative overflow-hidden">
+             <div class="absolute top-0 left-0 w-full overflow-hidden opacity-[0.03] pointer-events-none flex justify-center">
+                <span class="text-[12vw] font-['Syne'] font-bold leading-none whitespace-nowrap reveal-on-scroll">CONTACT</span>
+             </div>
+
+            <div class="container mx-auto px-6 relative z-10 reveal-on-scroll">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-32">
+                    <div class="md:col-span-1">
+                        <h4 class="font-['Syne'] font-bold text-2xl mb-6">GRAFISCH</h4>
+                        <p class="text-zinc-500 text-sm leading-relaxed">
+                            Redefining beauty standards through<br>student lens.
+                        </p>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600">Headquarters</h3>
+                        <address class="not-italic text-zinc-400 font-light text-sm leading-7">
+                            Heer Bokelweg 255<br/>
+                            Rotterdam, NL
+                        </address>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600">Connect</h3>
+                        <a href="mailto:info@grafischmodels.com" class="text-zinc-400 hover:text-white transition-colors text-sm">info@grafischmodels.com</a>
+                        <a href="tel:+31628510793" class="text-zinc-400 hover:text-white transition-colors text-sm">+31 (6) 28 51 07 93</a>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <h3 class="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600">Social</h3>
+                        <div class="flex gap-4">
+                            <a href="#" class="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                            </a>
+                            <a href="#" class="w-8 h-8 rounded-full border border-zinc-800 flex items-center justify-center text-white hover:bg-white hover:text-black hover:scale-110 transition-all duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-zinc-900 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] uppercase tracking-widest text-zinc-600">
+                    <p>&copy; 2026 Grafisch Agency.</p>
+                    <p class="mt-2 md:mt-0">Part of Grafisch Lyceum Rotterdam</p>
+                </div>
+            </div>
+        </footer>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const nav = document.getElementById('navbar');
+                const title = document.getElementById('nav-title');
+                
+                // Navbar scroll logic
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 50) {
+                        nav.classList.remove('py-8', 'border-white/5');
+                        nav.classList.add('py-4', 'bg-[#070707]/90', 'backdrop-blur-md', 'border-zinc-800');
+                        title.classList.remove('text-3xl', 'md:text-4xl');
+                        title.classList.add('text-xl', 'md:text-2xl');
+                    } else {
+                        nav.classList.add('py-8', 'border-white/5');
+                        nav.classList.remove('py-4', 'bg-[#070707]/90', 'backdrop-blur-md', 'border-zinc-800');
+                        title.classList.add('text-3xl', 'md:text-4xl');
+                        title.classList.remove('text-xl', 'md:text-2xl');
+                    }
+                });
+
+                // Scroll Reveal Logic (Observer)
+                const observerOptions = { threshold: 0.15, rootMargin: "0px" };
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target); 
+                        }
+                    });
+                }, observerOptions);
+
+                const revealElements = document.querySelectorAll('.reveal-on-scroll');
+                revealElements.forEach(el => observer.observe(el));
+            });
+        </script>
+    </main>
 }
