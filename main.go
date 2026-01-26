@@ -142,48 +142,6 @@ func (s *ServerContext) validateSession(r *http.Request) (string, bool) {
 	return tokenStr, true
 }
 
-// ---------------------- CACHE HELPERS ----------------------
-
-// responseCapturer is a helper that lets us "steal" the HTML
-// as it's being written so we can save it to the cache.
-type responseCapturer struct {
-	http.ResponseWriter
-	body []byte
-}
-
-func (w *responseCapturer) Write(b []byte) (int, error) {
-	w.body = append(w.body, b...)
-	return w.ResponseWriter.Write(b)
-}
-
-// CacheRoute is the actual middleware function.
-// It checks if we have the page saved. If yes, it shows it instantly.
-// If no, it lets the page load, saves it, and then remembers it for next time.
-func (s *ServerContext) CacheRoute(next http.HandlerFunc, duration time.Duration) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Use the specific URL (e.g., "/model/alex") as the ID for the saved page
-		key := "route_" + r.URL.String()
-
-		// 1. Check if we already have this page saved
-		if data, found := s.cache.Get(key); found {
-			// Add a special sticker so you know it came from cache
-			w.Header().Set("X-Cache", "HIT")
-			w.Write(data.([]byte))
-			return
-		}
-
-		// 2. If not found, prepare to capture the new page
-		capturer := &responseCapturer{ResponseWriter: w}
-
-		// Run the actual page logic
-		next(capturer, r)
-
-		// 3. Save the result for next time
-		if len(capturer.body) > 0 {
-			s.cache.Set(key, capturer.body, duration)
-		}
-	}
-}
 
 /**************************************************
  *                  MIDDLEWARE                    *
@@ -1197,12 +1155,15 @@ func main() {
 
 	// pages
 	// wrapped the function in sctx.CacheRoute
-	mux.HandleFunc("GET /", sctx.CacheRoute(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		root(pages.Home()).Render(r.Context(), w)
-	}, 2*time.Minute)) // This keeps the home page in memory for 2 minutes
+	}) 
 
 	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.overviewPage))
+	// TODO: make a page where a use can see a overview of all models
 	mux.HandleFunc("GET /model/{slug}", sctx.modelPublicPage)
+
+	// TODO: make a page where a use can see a overview of all phtotfraphers
 	mux.HandleFunc("GET /fotograaf/{slug}", sctx.fotograafPublicPage)
 
 	staticSubFS, err := fs.Sub(staticFs, "public")
