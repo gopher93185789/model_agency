@@ -11,13 +11,13 @@ const (
 )
 
 type UserProfile struct {
-	ID               uuid.UUID  `json:"id"`
-	SchoolEmail      string `json:"school_email"`
-	Name             string `json:"name"`
-	Role             string `json:"role"`
-	Approved         bool   `json:"approved"`
-	ProfileImageName string `json:"profile_image_name"`
-	ProfileImageData []byte `json:"profile_image_sata"`
+	ID               uuid.UUID `json:"id"`
+	SchoolEmail      string    `json:"school_email"`
+	Name             string    `json:"name"`
+	Role             string    `json:"role"`
+	Approved         bool      `json:"approved"`
+	ProfileImageName string    `json:"profile_image_name"`
+	ProfileImageData []byte    `json:"profile_image_sata"`
 }
 
 type AppUser struct {
@@ -85,4 +85,9 @@ type ModelOverviewInfo struct {
 type PortfolioImage struct {
 	ID     uuid.UUID `json:"id" db:"id"`
 	Base64 string    `json:"base64"`
+}
+
+type ApprovalUpdate struct {
+	UserID uuid.UUID
+	Status bool
 }
