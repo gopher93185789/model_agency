@@ -1,27 +1,28 @@
 package pages
 
 templ Login(errMsg string) {
-	<main class="min-h-screen bg-bg-dark flex">
-		<div class="hidden lg:block w-1/2 border-r border-border relative overflow-hidden">
+	<main class="min-h-screen bg-[#070707] flex">
+		<div class="hidden lg:block w-1/2 border-r border-zinc-800 relative overflow-hidden">
 			<div class="absolute inset-0 flex items-end p-12">
-				<span class="text-text-muted text-[30rem] font-black uppercase opacity-5 leading-none">G</span>
+				<span class="text-zinc-500 text-[30rem] font-black uppercase opacity-5 leading-none">G</span>
 			</div>
 		</div>
 
 		<div class="w-full lg:w-1/2 flex flex-col">
-			<header class="border-b border-border">
+			<header class="border-b border-zinc-800">
 				<div class="flex items-center justify-between py-6 px-8">
-					<a href="/" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
+					<a href="/" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
 						← Home
 					</a>
-					<span class="text-text-muted uppercase tracking-wider text-sm">Inloggen</span>
+					<span class="font-['Syne'] font-bold uppercase tracking-tighter text-2xl md:text-3xl text-white">Grafisch</span>
+					<span class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-500">Inloggen</span>
 				</div>
 			</header>
 
 			<div class="flex-1 flex items-center justify-center p-8">
 				<form method="POST" action="/api/login" enctype="application/x-www-form-urlencoded" class="w-full max-w-md">
-					<h1 class="text-5xl md:text-6xl font-black text-text uppercase tracking-tighter mb-2">Welkom</h1>
-					<p class="text-text-muted uppercase tracking-wider text-sm mb-12">Terug</p>
+					<h1 class="text-5xl md:text-6xl font-black text-white uppercase tracking-tighter mb-2">Welkom</h1>
+					<p class="text-zinc-500 uppercase tracking-wider text-sm mb-12">Terug</p>
 					
 					if errMsg != "" {
 						<div class="border border-red-500 text-red-400 text-sm p-4 mb-8 uppercase tracking-wider">
@@ -31,34 +32,34 @@ templ Login(errMsg string) {
 					
 					<div class="space-y-6">
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">School Email</label>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">School Email</label>
 							<input 
 								type="text" 
 								name="school_email" 
 								placeholder="Enter your school email"
 								required
-								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+								class="w-full bg-transparent border-b border-zinc-800 text-white py-3 focus:outline-none focus:border-white transition-colors placeholder:text-zinc-500"
 							/>
 						</div>
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Wachtwoord</label>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">Wachtwoord</label>
 							<input 
 								type="password" 
 								name="password" 
 								placeholder="Enter your password"
 								required
-								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+								class="w-full bg-transparent border-b border-zinc-800 text-white py-3 focus:outline-none focus:border-white transition-colors placeholder:text-zinc-500"
 							/>
 						</div>
 					</div>
 
-					<button type="submit" class="w-full bg-text text-bg-dark py-4 mt-12 uppercase tracking-wider text-sm font-bold hover:bg-text/90 transition-colors">
+					<button type="submit" class="w-full bg-white text-[#070707] py-4 mt-12 uppercase tracking-wider text-sm font-bold hover:bg-white/90 transition-colors">
 						Inloggen
 					</button>
 
-					<p class="text-center text-text-muted mt-8 uppercase tracking-wider text-sm">
+					<p class="text-center text-zinc-500 mt-8 uppercase tracking-wider text-sm">
 						Geen account? 
-						<a href="/signup" class="text-text hover:underline ml-2">Aanmelden</a>
+						<a href="/signup" class="text-white hover:underline ml-2">Aanmelden</a>
 					</p>
 				</form>
 			</div>

@@ -63,6 +63,10 @@ func main() {
 	mux.HandleFunc("POST /api/portfolio/upload", sctx.AuthMiddleware(sctx.UploadPortfolioImage))
 	mux.HandleFunc("POST /api/portfolio/delete", sctx.AuthMiddleware(sctx.DeletePortfolioImage))
 
+	// docent/admin api
+	mux.HandleFunc("POST /api/admin/approve", sctx.AuthMiddleware(sctx.HandleApproveUser))
+	mux.HandleFunc("POST /api/admin/revoke", sctx.AuthMiddleware(sctx.HandleRevokeUser))
+
 	srv := &http.Server{
 		Addr:    ":42069",
 		Handler: mux,

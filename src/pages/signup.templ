@@ -1,27 +1,28 @@
 package pages
 
 templ Signup(errMsg string) {
-	<main class="min-h-screen bg-bg-dark flex">
-		<div class="hidden lg:block w-1/2 border-r border-border relative overflow-hidden">
+	<main class="min-h-screen bg-[#070707] flex">
+		<div class="hidden lg:block w-1/2 border-r border-zinc-800 relative overflow-hidden">
 			<div class="absolute inset-0 flex items-end p-12">
-				<span class="text-text-muted text-[30rem] font-black uppercase opacity-5 leading-none">G</span>
+				<span class="text-zinc-500 text-[30rem] font-black uppercase opacity-5 leading-none">G</span>
 			</div>
 		</div>
 
 		<div class="w-full lg:w-1/2 flex flex-col">
-			<header class="border-b border-border">
+			<header class="border-b border-zinc-800">
 				<div class="flex items-center justify-between py-6 px-8">
-					<a href="/" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
+					<a href="/" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
 						← Home
 					</a>
-					<span class="text-text-muted uppercase tracking-wider text-sm">Registreren</span>
+					<span class="font-['Syne'] font-bold uppercase tracking-tighter text-2xl md:text-3xl text-white">Grafisch</span>
+					<span class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-500">Registreren</span>
 				</div>
 			</header>
 
 			<div class="flex-1 flex items-center justify-center p-8">
 				<form method="POST" action="/api/signup" enctype="multipart/form-data" class="w-full max-w-md">
-					<h1 class="text-5xl md:text-6xl font-black text-text uppercase tracking-tighter mb-2">Word Lid</h1>
-					<p class="text-text-muted uppercase tracking-wider text-sm mb-12">Van Ons Agency</p>
+					<h1 class="text-5xl md:text-6xl font-black text-white uppercase tracking-tighter mb-2">Word Lid</h1>
+					<p class="text-zinc-500 uppercase tracking-wider text-sm mb-12">Van Ons Agency</p>
 					
 					if errMsg != "" {
 						<div class="border border-red-500 text-red-400 text-sm p-4 mb-8 uppercase tracking-wider">
@@ -31,37 +32,37 @@ templ Signup(errMsg string) {
 					
 					<div class="space-y-6">
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">School Email</label>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">School Email</label>
 							<input 
 								type="text" 
 								name="school_email" 
 								placeholder="Enter your student email"
 								required
-								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+								class="w-full bg-transparent border-b border-zinc-800 text-white py-3 focus:outline-none focus:border-white transition-colors placeholder:text-zinc-500"
 							/>
 						</div>
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Naam</label>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">Naam</label>
 							<input 
 								type="text" 
 								name="name" 
 								placeholder="Enter your name"
 								required
-								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+								class="w-full bg-transparent border-b border-zinc-800 text-white py-3 focus:outline-none focus:border-white transition-colors placeholder:text-zinc-500"
 							/>
 						</div>
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Wachtwoord</label>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">Wachtwoord</label>
 							<input 
 								type="password" 
 								name="password" 
 								placeholder="Enter your password"
 								required
-								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors placeholder:text-text-muted"
+								class="w-full bg-transparent border-b border-zinc-800 text-white py-3 focus:outline-none focus:border-white transition-colors placeholder:text-zinc-500"
 							/>
 						</div>
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Profielfoto (optioneel)</label>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">Profielfoto (optioneel)</label>
 							<script>
 								function fileHandler() {
 									return {
@@ -101,13 +102,13 @@ templ Signup(errMsg string) {
 								/>
 								<label
 									for="profileImage"
-									class="border border-border text-text px-4 py-2 uppercase tracking-wider text-xs cursor-pointer hover:bg-text hover:text-bg-dark transition-colors"
+									class="border border-zinc-800 text-white px-4 py-2 uppercase tracking-wider text-xs cursor-pointer hover:bg-white hover:text-[#070707] transition-colors"
 									x-text="labelName"
 								>
 									Selecteer
 								</label>
-								<span class="text-text-muted text-sm" x-text="name"></span>
-								<button type="button" class="text-text-muted hover:text-text cursor-pointer" x-show="hasImage" @click="clearFile()">
+								<span class="text-zinc-500 text-sm" x-text="name"></span>
+								<button type="button" class="text-zinc-500 hover:text-white cursor-pointer" x-show="hasImage" @click="clearFile()">
 									<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
 									</svg>
@@ -115,26 +116,26 @@ templ Signup(errMsg string) {
 							</div>
 						</div>
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Rol</label>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">Rol</label>
 							<select
 								name="role"
 								required
-								class="w-full bg-transparent border-b border-border text-text py-3 focus:outline-none focus:border-text transition-colors cursor-pointer"
+								class="w-full bg-transparent border-b border-zinc-800 text-white py-3 focus:outline-none focus:border-white transition-colors cursor-pointer"
 							>
-								<option value="" disabled selected class="bg-bg-dark text-text-muted">Selecteer je rol</option>
-								<option value="fotograaf" class="bg-bg-dark text-text">Fotograaf</option>
-								<option value="model" class="bg-bg-dark text-text">Model</option>
+								<option value="" disabled selected class="bg-[#070707] text-zinc-500">Selecteer je rol</option>
+								<option value="fotograaf" class="bg-[#070707] text-white">Fotograaf</option>
+								<option value="model" class="bg-[#070707] text-white">Model</option>
 							</select>
 						</div>
 					</div>
 
-					<button type="submit" class="w-full bg-text text-bg-dark py-4 mt-12 uppercase tracking-wider text-sm font-bold hover:bg-text/90 transition-colors">
+					<button type="submit" class="w-full bg-white text-[#070707] py-4 mt-12 uppercase tracking-wider text-sm font-bold hover:bg-white/90 transition-colors">
 						Begin je Reis
 					</button>
 
-					<p class="text-center text-text-muted mt-8 uppercase tracking-wider text-sm">
+					<p class="text-center text-zinc-500 mt-8 uppercase tracking-wider text-sm">
 						Al een account? 
-						<a href="/login" class="text-text hover:underline ml-2">Inloggen</a>
+						<a href="/login" class="text-white hover:underline ml-2">Inloggen</a>
 					</p>
 				</form>
 			</div>

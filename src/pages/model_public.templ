@@ -5,19 +5,20 @@ import (
 )
 
 templ ModelPublic(data ModelData) {
-	<main class="min-h-screen bg-bg-dark">
-		<header class="border-b border-border">
+	<main class="min-h-screen bg-[#070707]">
+		<header class="border-b border-zinc-800">
 			<div class="flex items-center justify-between py-6 px-8">
-				<a href="/overview" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
+				<a href="/overview" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
 					← Terug
 				</a>
-				<span class="text-text-muted uppercase tracking-wider text-sm">Model Profiel</span>
+				<span class="font-['Syne'] font-bold uppercase tracking-tighter text-2xl md:text-3xl text-white">Grafisch</span>
+				<span class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-500">Model</span>
 			</div>
 		</header>
 
 		<div class="grid grid-cols-1 lg:grid-cols-2">
-			<div class="border-r border-border">
-				<div class="aspect-[3/4] w-full overflow-hidden bg-bg">
+			<div class="border-r border-zinc-800">
+				<div class="aspect-[3/4] w-full overflow-hidden bg-[#0b0b0b]">
 					if data.ProfileImageBase64 != "" {
 						<img 
 							src={ "data:;base64," + data.ProfileImageBase64 } 
@@ -26,67 +27,67 @@ templ ModelPublic(data ModelData) {
 						/>
 					} else {
 						<div class="w-full h-full flex items-end p-12">
-							<span class="text-text-muted text-[20rem] font-black uppercase opacity-10 leading-none">{ string(data.Name[0]) }</span>
+							<span class="text-zinc-500 text-[20rem] font-black uppercase opacity-10 leading-none">{ string(data.Name[0]) }</span>
 						</div>
 					}
 				</div>
 			</div>
 
 			<div class="flex flex-col">
-				<div class="border-b border-border p-8">
-					<h1 class="text-5xl md:text-6xl font-black text-text uppercase tracking-tighter">{ data.Name }</h1>
-					<p class="text-text-muted uppercase tracking-wider mt-2">{ fmt.Sprintf("%d Shoots", data.TotalShoots) }</p>
+				<div class="border-b border-zinc-800 p-8">
+					<h1 class="text-5xl md:text-6xl font-black text-white uppercase tracking-tighter">{ data.Name }</h1>
+					<p class="text-zinc-500 uppercase tracking-wider mt-2">{ fmt.Sprintf("%d Shoots", data.TotalShoots) }</p>
 				</div>
 
-				<div class="border-b border-border p-8">
-					<h2 class="text-text-muted uppercase tracking-wider text-xs mb-4">Contact</h2>
+				<div class="border-b border-zinc-800 p-8">
+					<h2 class="text-zinc-500 uppercase tracking-wider text-xs mb-4">Contact</h2>
 					<div class="space-y-2">
-						<p class="text-text uppercase tracking-wide">{ data.Email }</p>
+						<p class="text-white uppercase tracking-wide">{ data.Email }</p>
 						if data.Location != "" {
-							<p class="text-text-muted uppercase tracking-wide">{ data.Location }</p>
+							<p class="text-zinc-500 uppercase tracking-wide">{ data.Location }</p>
 						}
 					</div>
 				</div>
 
-				<div class="border-b border-border p-8">
-					<h2 class="text-text-muted uppercase tracking-wider text-xs mb-4">Afmetingen</h2>
+				<div class="border-b border-zinc-800 p-8">
+					<h2 class="text-zinc-500 uppercase tracking-wider text-xs mb-4">Afmetingen</h2>
 					<div class="grid grid-cols-4 gap-4">
 						<div>
-							<p class="text-text-muted uppercase tracking-wider text-xs">Lengte</p>
-							<p class="text-text text-2xl font-bold">{ data.Measurements.Height }</p>
+							<p class="text-zinc-500 uppercase tracking-wider text-xs">Lengte</p>
+							<p class="text-white text-2xl font-bold">{ data.Measurements.Height }</p>
 						</div>
 						<div>
-							<p class="text-text-muted uppercase tracking-wider text-xs">Borst</p>
-							<p class="text-text text-2xl font-bold">{ data.Measurements.Bust }</p>
+							<p class="text-zinc-500 uppercase tracking-wider text-xs">Borst</p>
+							<p class="text-white text-2xl font-bold">{ data.Measurements.Bust }</p>
 						</div>
 						<div>
-							<p class="text-text-muted uppercase tracking-wider text-xs">Taille</p>
-							<p class="text-text text-2xl font-bold">{ data.Measurements.Waist }</p>
+							<p class="text-zinc-500 uppercase tracking-wider text-xs">Taille</p>
+							<p class="text-white text-2xl font-bold">{ data.Measurements.Waist }</p>
 						</div>
 						<div>
-							<p class="text-text-muted uppercase tracking-wider text-xs">Heupen</p>
-							<p class="text-text text-2xl font-bold">{ data.Measurements.Hips }</p>
+							<p class="text-zinc-500 uppercase tracking-wider text-xs">Heupen</p>
+							<p class="text-white text-2xl font-bold">{ data.Measurements.Hips }</p>
 						</div>
 					</div>
 				</div>
 
 				if data.Bio != "" {
 					<div class="p-8 flex-1">
-						<h2 class="text-text-muted uppercase tracking-wider text-xs mb-4">Over</h2>
-						<p class="text-text leading-relaxed">{ data.Bio }</p>
+						<h2 class="text-zinc-500 uppercase tracking-wider text-xs mb-4">Over</h2>
+						<p class="text-white leading-relaxed">{ data.Bio }</p>
 					</div>
 				}
 			</div>
 		</div>
 
 		if len(data.Portfolio) > 0 {
-			<div class="border-t border-border">
-				<div class="p-8 border-b border-border">
-					<h2 class="text-text-muted uppercase tracking-wider text-xs">Portfolio</h2>
+			<div class="border-t border-zinc-800">
+				<div class="p-8 border-b border-zinc-800">
+					<h2 class="text-zinc-500 uppercase tracking-wider text-xs">Portfolio</h2>
 				</div>
 				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 					for _, img := range data.Portfolio {
-						<div class="aspect-[3/4] border-r border-b border-border overflow-hidden bg-bg">
+						<div class="aspect-[3/4] border-r border-b border-zinc-800 overflow-hidden bg-[#0b0b0b]">
 							<img src={ "data:;base64," + img.Base64 } alt="Portfolio" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500"/>
 						</div>
 					}

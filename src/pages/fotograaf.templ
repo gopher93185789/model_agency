@@ -19,42 +19,42 @@ func getDesc(desc *string) string {
 }
 
 templ Fotograaf(data []types.ModelOverviewInfo) {
-	<main class="min-h-screen bg-bg-dark">
-		<header class="border-b border-border">
+	<main class="min-h-screen bg-[#070707]">
+		<header class="border-b border-zinc-800">
 			<div class="flex items-center justify-between py-6 px-8">
-				<div class="flex items-center gap-8">
-					<h1 class="text-6xl font-black text-text uppercase tracking-tighter">Models</h1>
-					<span class="text-text-muted text-lg">{ len(data) } beschikbaar</span>
-				</div>
+				<a href="/overview" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
+					Models
+				</a>
+				<span class="font-['Syne'] font-bold uppercase tracking-tighter text-2xl md:text-3xl text-white">Grafisch</span>
 				<div class="flex items-center gap-6">
+					<a href="/profile" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
+						Profiel
+					</a>
 					<form action="/api/logout" method="POST">
-						<button type="submit" class="text-text-muted hover:text-text transition-colors text-sm uppercase tracking-wider">
+						<button type="submit" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
 							Logout
 						</button>
 					</form>
-					<a href="/profile" class="bg-white text-black font-bold py-4 px-8 uppercase tracking-wider text-sm hover:bg-text-muted transition-colors">
-						Mijn Profiel
-					</a>
 				</div>
 			</div>
 		</header>
 
-		<div class="border-b border-border">
+		<div class="border-b border-zinc-800">
 			<div class="flex items-center gap-0">
-				<div class="flex-1 border-r border-border">
+				<div class="flex-1 border-r border-zinc-800">
 					<input 
 						type="text" 
 						id="search-input"
 						placeholder="ZOEKEN..." 
-						class="w-full bg-transparent px-8 py-5 text-text text-lg placeholder-text-muted focus:outline-none uppercase tracking-wider"
+						class="w-full bg-transparent px-8 py-5 text-white text-lg placeholder-zinc-500 focus:outline-none uppercase tracking-wider"
 					/>
 				</div>
 				<select 
 					id="sort-select"
-					class="bg-transparent border-r border-border px-8 py-5 text-text text-sm focus:outline-none cursor-pointer uppercase tracking-wider"
+					class="bg-transparent border-r border-zinc-800 px-8 py-5 text-white text-sm focus:outline-none cursor-pointer uppercase tracking-wider"
 				>
-					<option value="name-asc" class="bg-bg-dark">A — Z</option>
-					<option value="name-desc" class="bg-bg-dark">Z — A</option>
+					<option value="name-asc" class="bg-[#070707]">A — Z</option>
+					<option value="name-desc" class="bg-[#070707]">Z — A</option>
 				</select>
 				<div class="flex">
 					<button 
@@ -64,13 +64,13 @@ templ Fotograaf(data []types.ModelOverviewInfo) {
 						Alle
 					</button>
 					<button 
-						class="filter-btn px-8 py-5 text-sm uppercase tracking-wider text-text-muted hover:text-text border-l border-border transition-colors"
+						class="filter-btn px-8 py-5 text-sm uppercase tracking-wider text-zinc-500 hover:text-white border-l border-zinc-800 transition-colors"
 						data-filter="with-photo"
 					>
 						Met Foto
 					</button>
 					<button 
-						class="filter-btn px-8 py-5 text-sm uppercase tracking-wider text-text-muted hover:text-text border-l border-border transition-colors"
+						class="filter-btn px-8 py-5 text-sm uppercase tracking-wider text-zinc-500 hover:text-white border-l border-zinc-800 transition-colors"
 						data-filter="with-bio"
 					>
 						Met Bio
@@ -81,8 +81,8 @@ templ Fotograaf(data []types.ModelOverviewInfo) {
 
 		<div id="models-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 			for _, model := range data {
-				<a href={ templ.SafeURL("/model/" + model.Slug) } class="group block border-b border-r border-border overflow-hidden">
-					<div class="aspect-[3/4] w-full overflow-hidden bg-bg">
+				<a href={ templ.SafeURL("/model/" + model.Slug) } class="group block border-b border-r border-zinc-800 overflow-hidden">
+					<div class="aspect-[3/4] w-full overflow-hidden bg-[#0b0b0b]">
 						if model.ProfileImageBase64 != nil {
 							<img 
 								src={ "data:;base64," + getProfileImage(model.ProfileImageBase64) } 
@@ -91,14 +91,14 @@ templ Fotograaf(data []types.ModelOverviewInfo) {
 							/>
 						} else {
 							<div class="w-full h-full flex items-end p-8">
-								<span class="text-text-muted text-8xl font-black uppercase opacity-20">{ string(model.Name[0]) }</span>
+								<span class="text-zinc-500 text-8xl font-black uppercase opacity-20">{ string(model.Name[0]) }</span>
 							</div>
 						}
 					</div>
-					<div class="p-6 border-t border-border bg-bg-dark group-hover:bg-bg-light transition-colors">
-						<h3 class="text-text text-2xl font-bold uppercase tracking-tight">{ model.Name }</h3>
+					<div class="p-6 border-t border-zinc-800 bg-[#070707] group-hover:bg-[#111111] transition-colors">
+						<h3 class="text-white text-2xl font-bold uppercase tracking-tight">{ model.Name }</h3>
 						if getDesc(model.Description) != "" {
-							<p class="text-text-muted text-sm mt-2 line-clamp-2 uppercase tracking-wider">{ getDesc(model.Description) }</p>
+							<p class="text-zinc-500 text-sm mt-2 line-clamp-2 uppercase tracking-wider">{ getDesc(model.Description) }</p>
 						}
 					</div>
 				</a>
@@ -107,8 +107,8 @@ templ Fotograaf(data []types.ModelOverviewInfo) {
 
 		if len(data) == 0 {
 			<div class="py-32 px-8">
-				<h3 class="text-text text-4xl font-black uppercase tracking-tighter mb-4">Geen models</h3>
-				<p class="text-text-muted uppercase tracking-wider">Er zijn nog geen models beschikbaar.</p>
+				<h3 class="text-white text-4xl font-black uppercase tracking-tighter mb-4">Geen models</h3>
+				<p class="text-zinc-500 uppercase tracking-wider">Er zijn nog geen models beschikbaar.</p>
 			</div>
 		}
 
@@ -163,10 +163,10 @@ templ Fotograaf(data []types.ModelOverviewInfo) {
 					btn.addEventListener('click', function() {
 						filterBtns.forEach(b => {
 							b.classList.remove('active', 'bg-white', 'text-black', 'font-bold');
-							b.classList.add('text-text-muted');
+							b.classList.add('text-zinc-500');
 						});
 						this.classList.add('active', 'bg-white', 'text-black', 'font-bold');
-						this.classList.remove('text-text-muted');
+						this.classList.remove('text-zinc-500');
 						activeFilter = this.dataset.filter;
 						filterAndSort();
 					});

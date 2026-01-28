@@ -157,14 +157,16 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 		id           uuid.UUID
 		passwordHash []byte
 		role         string
+		approved     bool
 		query        = `
-		SELECT id, password_hash, role 
-		FROM app_users 
-		WHERE school_email=$1 
+		SELECT u.id, u.password_hash, u.role, COALESCE(p.approved, false) 
+		FROM app_users u
+		LEFT JOIN profile p ON u.id = p.user_id
+		WHERE u.school_email=$1 
 		`
 	)
 
-	err := s.database.QueryRow(ctx, query, schoolEmail).Scan(&id, &passwordHash, &role)
+	err := s.database.QueryRow(ctx, query, schoolEmail).Scan(&id, &passwordHash, &role, &approved)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
 			http.Redirect(w, r, "/signup", http.StatusSeeOther)
@@ -178,6 +180,12 @@ func (s *ServerContext) Login(w http.ResponseWriter, r *http.Request) {
 
 	if err := bcrypt.CompareHashAndPassword(passwordHash, []byte(password)); err != nil {
 		http.Redirect(w, r, "/login?err=Invalid+credentials", http.StatusSeeOther)
+		return
+	}
+
+	// Check if user is approved (docents are always approved, but models/fotograafs need approval)
+	if !approved {
+		http.Redirect(w, r, "/login?err=Your+account+is+pending+approval", http.StatusSeeOther)
 		return
 	}
 

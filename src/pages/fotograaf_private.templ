@@ -1,17 +1,18 @@
 package pages
 
 templ FotograafPrivate(data FotograafData) {
-	<main class="min-h-screen bg-bg-dark">
-		<header class="border-b border-border">
+	<main class="min-h-screen bg-[#070707]">
+		<header class="border-b border-zinc-800">
 			<div class="flex items-center justify-between py-6 px-8">
-				<a href="/overview" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
+				<a href="/overview" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
 					← Terug
 				</a>
+				<span class="font-['Syne'] font-bold uppercase tracking-tighter text-2xl md:text-3xl text-white">Grafisch</span>
 				<div class="flex items-center gap-6">
-					<span class="text-accent uppercase tracking-wider text-xs">Bewerken</span>
+					<span class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-500">Bewerken</span>
 					<form action="/api/logout" method="POST">
-						<button type="submit" class="text-text-muted hover:text-text transition-colors uppercase tracking-wider text-sm">
-							Uitloggen
+						<button type="submit" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">
+							Logout
 						</button>
 					</form>
 				</div>
@@ -22,8 +23,8 @@ templ FotograafPrivate(data FotograafData) {
 			<input type="hidden" name="role" value="fotograaf"/>
 			
 			<div class="grid grid-cols-1 lg:grid-cols-2">
-				<div class="border-r border-border">
-					<div class="aspect-[3/4] w-full overflow-hidden bg-bg relative group">
+				<div class="border-r border-zinc-800">
+					<div class="aspect-[3/4] w-full overflow-hidden bg-[#0b0b0b] relative group">
 						if data.ProfileImageBase64 != "" {
 							<img 
 								src={ "data:;base64," + data.ProfileImageBase64 } 
@@ -32,7 +33,7 @@ templ FotograafPrivate(data FotograafData) {
 							/>
 						} else {
 							<div class="w-full h-full flex items-end p-12">
-								<span class="text-text-muted text-[20rem] font-black uppercase opacity-10 leading-none">{ string(data.Name[0]) }</span>
+								<span class="text-zinc-500 text-[20rem] font-black uppercase opacity-10 leading-none">{ string(data.Name[0]) }</span>
 							</div>
 						}
 						<label class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
@@ -49,31 +50,31 @@ templ FotograafPrivate(data FotograafData) {
 				</div>
 
 				<div class="flex flex-col">
-					<div class="border-b border-border p-8">
-						<h1 class="text-5xl md:text-6xl font-black text-text uppercase tracking-tighter">{ data.Name }</h1>
-						<p class="text-text-muted uppercase tracking-wider mt-2">Fotograaf</p>
+					<div class="border-b border-zinc-800 p-8">
+						<h1 class="text-5xl md:text-6xl font-black text-white uppercase tracking-tighter">{ data.Name }</h1>
+						<p class="text-zinc-500 uppercase tracking-wider mt-2">Fotograaf</p>
 					</div>
 
-					<div class="border-b border-border p-8">
-						<h2 class="text-text-muted uppercase tracking-wider text-xs mb-6">Contact</h2>
+					<div class="border-b border-zinc-800 p-8">
+						<h2 class="text-zinc-500 uppercase tracking-wider text-xs mb-6">Contact</h2>
 						<div>
-							<label class="text-text-muted uppercase tracking-wider text-xs block mb-2">Email</label>
-							<p class="text-text uppercase tracking-wide">{ data.Email }</p>
+							<label class="text-zinc-500 uppercase tracking-wider text-xs block mb-2">Email</label>
+							<p class="text-white uppercase tracking-wide">{ data.Email }</p>
 						</div>
 					</div>
 
 					<div class="p-8 flex-1">
-						<h2 class="text-text-muted uppercase tracking-wider text-xs mb-6">Over</h2>
+						<h2 class="text-zinc-500 uppercase tracking-wider text-xs mb-6">Over</h2>
 						<textarea 
 							name="bio" 
 							placeholder="Vertel iets over jezelf..."
 							rows="6"
-							class="w-full bg-transparent border border-border text-text p-4 focus:outline-none focus:border-text transition-colors resize-none"
+							class="w-full bg-transparent border border-zinc-800 text-white p-4 focus:outline-none focus:border-white transition-colors resize-none"
 						>{ data.Bio }</textarea>
 					</div>
 
-					<div class="border-t border-border p-8">
-						<button type="submit" class="w-full bg-text text-bg-dark py-4 uppercase tracking-wider text-sm font-bold hover:bg-text/90 transition-colors">
+					<div class="border-t border-zinc-800 p-8">
+						<button type="submit" class="w-full bg-white text-[#070707] py-4 uppercase tracking-wider text-sm font-bold hover:bg-white/90 transition-colors">
 							Opslaan
 						</button>
 					</div>
@@ -81,11 +82,11 @@ templ FotograafPrivate(data FotograafData) {
 			</div>
 		</form>
 
-		<div class="border-t border-border">
+		<div class="border-t border-zinc-800">
 			<div class="p-8">
 				<div class="border border-red-500/30 p-8">
 					<h3 class="text-red-400 font-bold uppercase tracking-wider text-sm mb-2">Gevaarzone</h3>
-					<p class="text-text-muted text-sm mb-6">Als je je account verwijdert, is er geen weg terug. Wees zeker.</p>
+					<p class="text-zinc-500 text-sm mb-6">Als je je account verwijdert, is er geen weg terug. Wees zeker.</p>
 					<form action="/api/profile/delete" method="POST" onsubmit="return confirm('Weet je zeker dat je je account wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.');">
 						<button type="submit" class="border border-red-500 text-red-400 px-6 py-3 uppercase tracking-wider text-sm hover:bg-red-500 hover:text-white transition-colors">
 							Account Verwijderen

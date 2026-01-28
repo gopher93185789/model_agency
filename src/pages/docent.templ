@@ -5,28 +5,37 @@ import (
 	"github.com/gopher93185789/model_agency/pkg/types"
 )
 
+func boolToString(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}
+
 templ Docent(data []types.UserProfile) {
-	<main class="min-h-screen bg-bg-dark text-text">
-		<nav class="flex justify-between items-center p-8 border-b border-border text-[10px] uppercase tracking-widest">
-			<a href="/" class="text-text-muted hover:text-text transition-colors">← Home</a>
-			<div class="text-lg tracking-[0.8em] text-text-muted">GRAFISCH</div>
-			<div class="flex items-center gap-8">
-				<span class="text-text-muted">ADMIN PORTAL</span>
+	<main class="min-h-screen bg-[#070707] text-white">
+		<nav class="flex justify-between items-center py-6 px-8 border-b border-zinc-800">
+			<a href="/" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">← Home</a>
+			<a href="/" id="nav-title" class="font-['Syne'] font-bold uppercase tracking-tighter transition-all duration-500 text-3xl md:text-4xl origin-center">
+                    Grafisch
+            </a>
+			<div class="flex items-center gap-6">
+				<span class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-500">Admin</span>
 				<form action="/api/logout" method="POST">
-					<button type="submit" class="hover:text-text text-text-muted transition-colors">Logout</button>
+					<button type="submit" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">Logout</button>
 				</form>
 			</div>
 		</nav>
-		<header class="py-24 px-8 text-center border-b border-border">
+		<header class="py-24 px-8 text-center border-b border-zinc-800">
 			<h1 class="text-6xl md:text-8xl font-black uppercase tracking-tight mb-4">DOCENT PORTAAL</h1>
-			<p class="text-[10px] uppercase tracking-widest text-text-muted">
-				Management System <span class="mx-4 text-text-muted-extra">/</span>
-				Total Users: <span id="total-users" class="text-text">{ len(data) }</span>
+			<p class="text-[10px] uppercase tracking-widest text-zinc-500">
+				Management System <span class="mx-4 text-zinc-600">/</span>
+				Total Users: <span id="total-users" class="text-white">{ len(data) }</span>
 			</p>
 		</header>
 		<section id="users-list">
 			for _, obj := range data {
-				<div class="grid grid-cols-12 gap-4 items-center py-8 border-b border-zinc-900 group hover:bg-zinc-950/50 transition-all duration-500 px-4 -mx-4" data-user-row>
+				<div class="grid grid-cols-12 gap-4 items-center py-8 border-b border-zinc-900 group hover:bg-zinc-950/50 transition-all duration-500 px-4 -mx-4" data-user-row data-user-id={ obj.ID.String() }>
 					<div class="col-span-5 md:col-span-6 flex items-center gap-6">
 						<div class="w-16 h-20 bg-zinc-900 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
 							<img src={ "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(obj.ProfileImageData) } alt="profile" class="w-full h-full object-cover"/>
@@ -40,7 +49,7 @@ templ Docent(data []types.UserProfile) {
 						<span class="text-[10px] letter-spaced-wide border border-zinc-800 px-3 py-1 font-bold">{ obj.Role }</span>
 					</div>
 					<div class="col-span-3 flex flex-col items-center">
-						<button data-approve-toggle class="flex items-center gap-3 transition-opacity hover:opacity-70">
+						<button data-approve-toggle data-current-status={ boolToString(obj.Approved) } class="flex items-center gap-3 transition-opacity hover:opacity-70">
 							<span data-status-label class="text-[9px] font-bold letter-spaced-wide uppercase ">
 								if obj.Approved {
 									{ "APPROVED" }
@@ -49,19 +58,25 @@ templ Docent(data []types.UserProfile) {
 								}
 							</span>
 							<div class="w-10 h-1.5 bg-zinc-800 rounded-full relative">
-								<div data-toggle-knob class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.3)] }"></div>
+								<div 
+									data-toggle-knob 
+									class={
+										"absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.3)]",
+										templ.KV("bg-white right-0", obj.Approved),
+										templ.KV("bg-zinc-800 left-0", !obj.Approved),
+									}
+								></div>
 							</div>
 						</button>
 					</div>
 					<div class="col-span-2 text-right flex justify-end gap-4">
-						<button class="text-[10px] font-bold letter-spaced-wide hover:text-white text-zinc-600 underline underline-offset-8 decoration-zinc-800 hover:decoration-white transition-all">EDIT</button>
 						<button data-revoke class="text-[10px] font-bold letter-spaced-wide hover:text-red-500 text-zinc-600 transition-colors">REVOKE</button>
 					</div>
 				</div>
 			}
 		</section>
-		<footer class="p-12 text-center border-t border-border opacity-30 hover:opacity-100 transition-opacity">
-			<p class="text-[9px] uppercase tracking-[.5em] text-text-muted">© 2026 Grafisch Lyceum Student Agency</p>
+		<footer class="p-12 text-center border-t border-zinc-800 opacity-30 hover:opacity-100 transition-opacity">
+			<p class="text-[9px] uppercase tracking-[.5em] text-zinc-500">© 2026 Grafisch Lyceum Student Agency</p>
 		</footer>
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
@@ -70,37 +85,86 @@ templ Docent(data []types.UserProfile) {
 				const items = list.querySelectorAll('[data-user-row]');
 				total.textContent = items.length.toString();
 
-				list.addEventListener('click', function(e) {
+				list.addEventListener('click', async function(e) {
 					const target = e.target;
 					if (!(target instanceof HTMLElement)) return;
+					
+					// Handle approve toggle
 					const toggle = target.closest('[data-approve-toggle]');
 					if (toggle instanceof HTMLElement) {
-						const pressed = toggle.getAttribute('aria-pressed') === 'true';
-						toggle.setAttribute('aria-pressed', (!pressed).toString());
-						const label = toggle.querySelector('[data-status-label]');
-						const knob = toggle.querySelector('[data-toggle-knob]');
-						if (label instanceof HTMLElement) label.textContent = pressed ? 'PENDING' : 'APPROVED';
-						if (knob instanceof HTMLElement) {
-							knob.classList.toggle('bg-white', !pressed);
-							knob.classList.toggle('bg-border', pressed);
-							knob.classList.toggle('left-0', pressed);
-							knob.classList.toggle('right-0', !pressed);
+						const row = toggle.closest('[data-user-row]');
+						if (!row) return;
+						
+						const userId = row.getAttribute('data-user-id');
+						const currentStatus = toggle.getAttribute('data-current-status') === 'true';
+						const newStatus = !currentStatus;
+						
+						try {
+							const response = await fetch('/api/admin/approve', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ user_id: userId, approved: newStatus })
+							});
+							
+							if (!response.ok) throw new Error('Failed to update status');
+							
+							// Update UI
+							toggle.setAttribute('data-current-status', newStatus.toString());
+							const label = toggle.querySelector('[data-status-label]');
+							const knob = toggle.querySelector('[data-toggle-knob]');
+							
+							if (label instanceof HTMLElement) {
+								label.textContent = newStatus ? 'APPROVED' : 'PENDING';
+							}
+							
+							if (knob instanceof HTMLElement) {
+								knob.classList.toggle('bg-white', newStatus);
+								knob.classList.toggle('bg-zinc-800', !newStatus);
+								knob.classList.toggle('left-0', !newStatus);
+								knob.classList.toggle('right-0', newStatus);
+							}
+						} catch (error) {
+							console.error('Error updating approval status:', error);
+							alert('Failed to update approval status. Please try again.');
 						}
 					}
 
+					// Handle revoke
 					const revoke = target.closest('[data-revoke]');
 					if (revoke instanceof HTMLElement) {
 						const row = revoke.closest('[data-user-row]');
-						if (row) {
+						if (!row) return;
+						
+						const userId = row.getAttribute('data-user-id');
+						const userName = row.querySelector('h2')?.textContent || 'this user';
+						
+						if (!confirm(`Are you sure you want to permanently delete ${userName}? This action cannot be undone.`)) {
+							return;
+						}
+						
+						try {
+							const response = await fetch('/api/admin/revoke', {
+								method: 'POST',
+								headers: { 'Content-Type': 'application/json' },
+								body: JSON.stringify({ user_id: userId })
+							});
+							
+							if (!response.ok) throw new Error('Failed to delete user');
+							
+							// Remove from UI
 							row.remove();
 							const itemsAfter = list.querySelectorAll('[data-user-row]');
 							total.textContent = itemsAfter.length.toString();
+							
 							if (itemsAfter.length === 0) {
 								const empty = document.createElement('div');
-								empty.className = 'py-16 text-center text-text-muted uppercase tracking-wider';
+								empty.className = 'py-16 text-center text-zinc-500 uppercase tracking-wider';
 								empty.textContent = 'Nog geen gebruikers om te tonen';
 								list.appendChild(empty);
 							}
+						} catch (error) {
+							console.error('Error deleting user:', error);
+							alert('Failed to delete user. Please try again.');
 						}
 					}
 				});
