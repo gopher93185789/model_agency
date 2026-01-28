@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS profile (
     description TEXT
 );
 
-
 CREATE TABLE IF NOT EXISTS model_info (
     id UUID REFERENCES profile(id),
     height INT DEFAULT 0,

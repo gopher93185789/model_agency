@@ -10,6 +10,16 @@ const (
 	RoleDocent    Role = "docent"
 )
 
+type UserProfile struct {
+	ID               uuid.UUID  `json:"id"`
+	SchoolEmail      string `json:"school_email"`
+	Name             string `json:"name"`
+	Role             string `json:"role"`
+	Approved         bool   `json:"approved"`
+	ProfileImageName string `json:"profile_image_name"`
+	ProfileImageData []byte `json:"profile_image_sata"`
+}
+
 type AppUser struct {
 	ID           uuid.UUID `json:"id" db:"id"`
 	Role         Role      `json:"role" db:"role"`
