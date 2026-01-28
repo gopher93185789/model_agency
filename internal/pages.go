@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/gopher93185789/model_agency/src"
 	"github.com/gopher93185789/model_agency/src/pages"
-	"github.com/patrickmn/go-cache"
 )
 
 func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
@@ -25,13 +24,6 @@ func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
 			sid = token
 		} else {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
-	}
-
-	if p, ok := s.cache.Get(sid); ok {
-		if v, ok := p.(templ.Component); ok {
-			src.Root(v).Render(r.Context(), w)
 			return
 		}
 	}
@@ -72,7 +64,6 @@ func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println(len(data))
 		page = pages.Docent(data)
-		s.cache.Set(sid, page, cache.DefaultExpiration)
 	case "model":
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
@@ -88,7 +79,6 @@ func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		page = pages.Fotograaf(models)
-		s.cache.Set(sid, page, cache.DefaultExpiration)
 	default:
 		http.Redirect(w, r, "/", http.StatusPermanentRedirect)
 		return
@@ -133,7 +123,7 @@ func (s *ServerContext) FotograafPublicPage(w http.ResponseWriter, r *http.Reque
 }
 
 // ModelsPage renders a public listing of all models with basic info.
-// Clicking any card redirects the user to /overview (handled in the template via link).
+// Clicking any card redirects the user to /model/{slug}.
 func (s *ServerContext) ModelsPage(w http.ResponseWriter, r *http.Request) {
 	models, err := s.GetFotograafOverviewInfo()
 	if err != nil {
@@ -142,6 +132,18 @@ func (s *ServerContext) ModelsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	src.Root(pages.Models(models)).Render(r.Context(), w)
+}
+
+// FotograafPage renders a public listing of all photographers.
+// Clicking any card redirects the user to /fotograaf/{slug}.
+func (s *ServerContext) FotograafPage(w http.ResponseWriter, r *http.Request) {
+	photographers, err := s.GetFotografenOverviewInfo()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	src.Root(pages.Fotografen(photographers)).Render(r.Context(), w)
 }
 
 func (s *ServerContext) ModelPrivatePage(w http.ResponseWriter, r *http.Request) {

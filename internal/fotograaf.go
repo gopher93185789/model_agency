@@ -59,7 +59,7 @@ func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, e
 		p.profile_image_data
 	FROM app_users u
 	JOIN profile p ON u.id = p.user_id
-	WHERE u.role = 'model'
+	WHERE u.role = 'model' AND p.approved = true
 	`
 
 	rows, err := s.database.Query(context.Background(), q)
@@ -91,6 +91,52 @@ func (s *ServerContext) GetFotograafOverviewInfo() ([]types.ModelOverviewInfo, e
 	}
 
 	return models, nil
+}
+
+// GetFotografenOverviewInfo returns public overview info for all photographers.
+func (s *ServerContext) GetFotografenOverviewInfo() ([]types.ModelOverviewInfo, error) {
+	q := `
+	SELECT 
+		u.id,
+		u.name,
+		LOWER(REPLACE(REPLACE(u.name, ' ', '-'), '.', '')) as slug,
+		p.description,
+		p.profile_image_name,
+		p.profile_image_data
+	FROM app_users u
+	JOIN profile p ON u.id = p.user_id
+	WHERE u.role = 'fotograaf'
+	`
+
+	rows, err := s.database.Query(context.Background(), q)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var photographers []types.ModelOverviewInfo
+	for rows.Next() {
+		var (
+			info       types.ModelOverviewInfo
+			imageName  *string
+			imageBytes []byte
+		)
+		if err := rows.Scan(&info.UserID, &info.Name, &info.Slug, &info.Description, &imageName, &imageBytes); err != nil {
+			return nil, err
+		}
+		info.ProfileImageName = imageName
+		if len(imageBytes) > 0 {
+			b64 := toBase64(imageBytes)
+			info.ProfileImageBase64 = &b64
+		}
+		photographers = append(photographers, info)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return photographers, nil
 }
 
 func (s *ServerContext) GetFotograafBySlug(slug string) (*pages.FotograafData, error) {

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS profile (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES app_users(id) ON DELETE CASCADE,
     approved BOOLEAN DEFAULT false,
-    profile_image_name TEXT,
+    prowfile_image_name TEXT,
     profile_image_data BYTEA,
     description TEXT
 );

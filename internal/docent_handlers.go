@@ -38,9 +38,9 @@ func (s *ServerContext) HandleApproveUser(w http.ResponseWriter, r *http.Request
 	}
 
 	if types.Role(claims.Role) != types.RoleDocent {
-    http.Error(w, "Forbidden: Only docents can approve users", http.StatusForbidden)
-    return
-}
+		http.Error(w, "Forbidden: Only docents can approve users", http.StatusForbidden)
+		return
+	}
 
 	var req ApproveUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -93,9 +93,9 @@ func (s *ServerContext) HandleRevokeUser(w http.ResponseWriter, r *http.Request)
 	}
 
 	if types.Role(claims.Role) != types.RoleDocent {
-    http.Error(w, "Forbidden: Only docents can approve users", http.StatusForbidden)
-    return
-}
+		http.Error(w, "Forbidden: Only docents can approve users", http.StatusForbidden)
+		return
+	}
 
 	var req RevokeUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

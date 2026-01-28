@@ -4,7 +4,7 @@ import (
     "github.com/gopher93185789/model_agency/pkg/types"
 )
 
-templ Models(data []types.ModelOverviewInfo) {
+templ Fotografen(data []types.ModelOverviewInfo) {
     <main class="min-h-screen bg-[#070707]">
         <header class="border-b border-zinc-800">
             <div class="flex items-center justify-between py-6 px-8">
@@ -16,31 +16,31 @@ templ Models(data []types.ModelOverviewInfo) {
 
         <div class="border-b border-zinc-800">
             <div class="py-6 px-8">
-                <h2 class="text-white text-3xl md:text-4xl font-bold uppercase tracking-tight">Models</h2>
+                <h2 class="text-white text-3xl md:text-4xl font-bold uppercase tracking-tight">Fotografen</h2>
                 <p class="text-zinc-500 mt-2 uppercase tracking-wider">Public profiles: photo and brief info</p>
             </div>
         </div>
 
-        <div id="models-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            for _, model := range data {
-                <a href={ templ.SafeURL("/model/" + model.Slug) } class="group block border-b border-r border-zinc-800 overflow-hidden">
+        <div id="photographers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            for _, p := range data {
+                <a href={ templ.SafeURL("/fotograaf/" + p.Slug) } class="group block border-b border-r border-zinc-800 overflow-hidden">
                     <div class="aspect-[3/4] w-full overflow-hidden bg-[#0b0b0b]">
-                        if model.ProfileImageBase64 != nil {
+                        if p.ProfileImageBase64 != nil {
                             <img 
-                                src={ "data:;base64," + getProfileImage(model.ProfileImageBase64) } 
-                                alt={ model.Name } 
+                                src={ "data:;base64," + getProfileImage(p.ProfileImageBase64) } 
+                                alt={ p.Name } 
                                 class="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
                             />
                         } else {
                             <div class="w-full h-full flex items-end p-8">
-                                <span class="text-zinc-500 text-8xl font-black uppercase opacity-20">{ string(model.Name[0]) }</span>
+                                <span class="text-zinc-500 text-8xl font-black uppercase opacity-20">{ string(p.Name[0]) }</span>
                             </div>
                         }
                     </div>
                     <div class="p-6 border-t border-zinc-800 bg-[#070707] group-hover:bg-[#111111] transition-colors">
-                        <h3 class="text-white text-2xl font-bold uppercase tracking-tight">{ model.Name }</h3>
-                        if getDesc(model.Description) != "" {
-                            <p class="text-zinc-500 text-sm mt-2 line-clamp-2 uppercase tracking-wider">{ getDesc(model.Description) }</p>
+                        <h3 class="text-white text-2xl font-bold uppercase tracking-tight">{ p.Name }</h3>
+                        if getDesc(p.Description) != "" {
+                            <p class="text-zinc-500 text-sm mt-2 line-clamp-2 uppercase tracking-wider">{ getDesc(p.Description) }</p>
                         }
                     </div>
                 </a>
@@ -49,8 +49,8 @@ templ Models(data []types.ModelOverviewInfo) {
 
         if len(data) == 0 {
             <div class="py-32 px-8">
-                <h3 class="text-white text-4xl font-black uppercase tracking-tighter mb-4">Geen models</h3>
-                <p class="text-zinc-500 uppercase tracking-wider">Er zijn nog geen models beschikbaar.</p>
+                <h3 class="text-white text-4xl font-black uppercase tracking-tighter mb-4">Geen fotografen</h3>
+                <p class="text-zinc-500 uppercase tracking-wider">Er zijn nog geen fotografen beschikbaar.</p>
             </div>
         }
     </main>

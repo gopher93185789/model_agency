@@ -262,8 +262,6 @@ func (s *ServerContext) DeleteProfile(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	s.cache.Delete(sid)
-
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -349,8 +347,6 @@ func (s *ServerContext) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Failed to update model_info: %v", err)
 		}
 	}
-
-	s.cache.Delete(sid)
 
 	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 }
