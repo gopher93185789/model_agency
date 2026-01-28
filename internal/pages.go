@@ -133,6 +133,18 @@ func (s *ServerContext) FotograafPublicPage(w http.ResponseWriter, r *http.Reque
 	src.Root(pages.FotograafPublic(*fotograafData)).Render(r.Context(), w)
 }
 
+// ModelsPage renders a public listing of all models with basic info.
+// Clicking any card redirects the user to /overview (handled in the template via link).
+func (s *ServerContext) ModelsPage(w http.ResponseWriter, r *http.Request) {
+	models, err := s.GetFotograafOverviewInfo()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	src.Root(pages.Models(models)).Render(r.Context(), w)
+}
+
 func (s *ServerContext) ModelPrivatePage(w http.ResponseWriter, r *http.Request) {
 	sid := r.Header.Get(middlewareToken)
 	if sid == "" {

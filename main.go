@@ -39,6 +39,8 @@ func main() {
 	})
 
 	mux.HandleFunc("GET /overview", sctx.AuthMiddleware(sctx.OverviewPage))
+	// Public models listing page
+	mux.HandleFunc("GET /models", sctx.ModelsPage)
 	// TODO: make a page where a use can see a overview of all models
 	mux.HandleFunc("GET /model/{slug}", sctx.ModelPublicPage)
 
