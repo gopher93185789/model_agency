@@ -15,6 +15,7 @@ import (
 func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
 	var (
 		page templ.Component
+		ctx  = r.Context()
 	)
 
 	sid := r.Header.Get(middlewareToken)
@@ -42,7 +43,16 @@ func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
 
 	switch claims.Role {
 	case "docent":
-		page = pages.Docent()
+		// TODO: get page and limit from url params
+		data, err := s.GetUsersForDocentPage(ctx, 50, 1)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+			// TODO: handke err
+		}
+
+		fmt.Println(len(data))
+		page = pages.Docent(data)
 		s.cache.Set(sid, page, cache.DefaultExpiration)
 	case "model":
 		// Models don't have an overview page, redirect to their private profile

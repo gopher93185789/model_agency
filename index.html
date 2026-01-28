@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCENT PORTAAL | GRAFISCH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Playfair+Display:ital@1&display=swap');
+        
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+        }
+        .font-editorial { font-family: 'Playfair Display', serif; }
+        .letter-spaced-wide { letter-spacing: 0.4em; }
+        .letter-spaced-tight { letter-spacing: -0.05em; }
+        
+        /* Custom scrollbar for that clean look */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+    </style>
+</head>
+<body x-data="{ 
+    users: [
+        { id: 1, name: 'JULIA VANDERBILT', email: 'j.vanderbilt@grafisch.nl', role: 'MODEL', approved: true, img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200' },
+        { id: 2, name: 'MARCUS CHENG', email: 'm.cheng@grafisch.nl', role: 'STUDENT', approved: false, img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200' },
+        { id: 3, name: 'ELARA VOSS', email: 'e.voss@grafisch.nl', role: 'PHOTOGRAPHER', approved: true, img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200' }
+    ]
+}">
+
+    <nav class="flex justify-between items-center p-8 border-b border-zinc-800 text-[10px] letter-spaced-wide font-bold uppercase">
+        <a href="#" class="hover:text-zinc-400 transition-colors">← HOME</a>
+        <div class="text-lg tracking-[1em] mr-[-1em]">GRAFISCH</div>
+        <div class="flex gap-8">
+            <span class="text-zinc-500">ADMIN PORTAL</span>
+            <a href="#" class="hover:text-zinc-400">LOGOUT</a>
+        </div>
+    </nav>
+
+    <header class="py-24 px-8 text-center border-b border-zinc-800">
+        <h1 class="text-7xl md:text-9xl font-black letter-spaced-tight mb-4">DOCENT BRR</h1>
+        <p class="text-[10px] letter-spaced-wide text-zinc-500 uppercase">
+            Management System <span class="mx-4 text-zinc-800">/</span> 
+            Total Users: <span class="text-white" x-text="users.length"></span>
+        </p>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-8 py-12">
+        <div class="grid grid-cols-12 gap-4 pb-6 mb-6 text-[10px] letter-spaced-wide text-zinc-600 font-bold uppercase border-b border-zinc-900">
+            <div class="col-span-5 md:col-span-6 text-left">User Details</div>
+            <div class="col-span-2 text-center">Role</div>
+            <div class="col-span-3 text-center">Status</div>
+            <div class="col-span-2 text-right">Actions</div>
+        </div>
+
+        <template x-for="user in users" :key="user.id">
+            <div class="grid grid-cols-12 gap-4 items-center py-8 border-b border-zinc-900 group hover:bg-zinc-950/50 transition-all duration-500 px-4 -mx-4">
+                
+                <div class="col-span-5 md:col-span-6 flex items-center gap-6">
+                    <div class="w-16 h-20 bg-zinc-900 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <img :src="user.img" class="w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold tracking-tight mb-1" x-text="user.name"></h2>
+                        <p class="font-editorial italic text-zinc-500 text-sm" x-text="user.email"></p>
+                    </div>
+                </div>
+
+                <div class="col-span-2 text-center">
+                    <span class="text-[10px] letter-spaced-wide border border-zinc-800 px-3 py-1 font-bold" x-text="user.role"></span>
+                </div>
+
+                <div class="col-span-3 flex flex-col items-center">
+                    <button 
+                        @click="user.approved = !user.approved"
+                        class="flex items-center gap-3 transition-opacity hover:opacity-70">
+                        <span class="text-[9px] font-bold letter-spaced-wide uppercase" :class="user.approved ? 'text-white' : 'text-zinc-600'" x-text="user.approved ? 'APPROVED' : 'PENDING'"></span>
+                        <div class="w-10 h-[6px] bg-zinc-800 rounded-full relative">
+                            <div class="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.3)]"
+                                 :class="user.approved ? 'bg-white right-0' : 'bg-zinc-600 left-0'"></div>
+                        </div>
+                    </button>
+                </div>
+
+                <div class="col-span-2 text-right flex justify-end gap-4">
+                    <button class="text-[10px] font-bold letter-spaced-wide hover:text-white text-zinc-600 underline underline-offset-8 decoration-zinc-800 hover:decoration-white transition-all">EDIT</button>
+                    <button @click="users = users.filter(u => u.id !== user.id)" class="text-[10px] font-bold letter-spaced-wide hover:text-red-500 text-zinc-600 transition-colors">REVOKE</button>
+                </div>
+
+            </div>
+        </template>
+    </main>
+
+    <footer class="p-12 text-center border-t border-zinc-900 opacity-20 hover:opacity-100 transition-opacity">
+        <p class="text-[9px] letter-spaced-wide text-zinc-500 uppercase tracking-[.5em]">
+            © 2026 Grafisch Lyceum Student Agency
+        </p>
+    </footer>
+
+</body>
+</html>

@@ -1,7 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-dark: #070707;
+    --color-bg: #0b0b0b;
+    --color-bg-dark: #070707;
+    --color-bg-light: #111111;
   --color-text: #f5f5f5;
   --color-text-muted: #9a9a9a;
   --color-text-muted-extra: #6f6f6f;

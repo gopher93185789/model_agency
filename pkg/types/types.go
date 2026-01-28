@@ -88,6 +88,6 @@ type PortfolioImage struct {
 }
 
 type ApprovalUpdate struct {
-	UserID uuid.UUID
-	Status bool
+	UserID uuid.UUID `json:"user_id"`
+	Status bool      `json:"status"`
 }
