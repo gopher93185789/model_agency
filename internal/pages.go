@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/a-h/templ"
 	"github.com/google/uuid"
@@ -43,8 +44,26 @@ func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
 
 	switch claims.Role {
 	case "docent":
-		// TODO: get page and limit from url params
-		data, err := s.GetUsersForDocentPage(ctx, 50, 1)
+		q := r.URL.Query()
+		limit := 50
+		pageNum := 1
+
+		if l := q.Get("limit"); l != "" {
+			if v, err := strconv.Atoi(l); err == nil && v > 0 {
+				if v > 100 {
+					v = 100
+				}
+				limit = v
+			}
+		}
+
+		if p := q.Get("page"); p != "" {
+			if v, err := strconv.Atoi(p); err == nil && v > 0 {
+				pageNum = v
+			}
+		}
+
+		data, err := s.GetUsersForDocentPage(ctx, limit, pageNum)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

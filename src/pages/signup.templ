@@ -1,7 +1,7 @@
 package pages
 
 templ Signup(errMsg string) {
-	<main class="min-h-screen bg-[#070707] flex">
+	<main class="min-h-screen bg-bg-dark flex">
 		<div class="hidden lg:block w-1/2 border-r border-zinc-800 relative overflow-hidden">
 			<div class="absolute inset-0 flex items-end p-12">
 				<span class="text-zinc-500 text-[30rem] font-black uppercase opacity-5 leading-none">G</span>
@@ -102,7 +102,7 @@ templ Signup(errMsg string) {
 								/>
 								<label
 									for="profileImage"
-									class="border border-zinc-800 text-white px-4 py-2 uppercase tracking-wider text-xs cursor-pointer hover:bg-white hover:text-[#070707] transition-colors"
+									class="border border-zinc-800 text-white px-4 py-2 uppercase tracking-wider text-xs cursor-pointer hover:bg-white hover:text-bg-dbg-bg-dark transition-colors"
 									x-text="labelName"
 								>
 									Selecteer
@@ -122,16 +122,21 @@ templ Signup(errMsg string) {
 								required
 								class="w-full bg-transparent border-b border-zinc-800 text-white py-3 focus:outline-none focus:border-white transition-colors cursor-pointer"
 							>
-								<option value="" disabled selected class="bg-[#070707] text-zinc-500">Selecteer je rol</option>
-								<option value="fotograaf" class="bg-[#070707] text-white">Fotograaf</option>
-								<option value="model" class="bg-[#070707] text-white">Model</option>
+								<option value="" disabled selected class="bg-bg-dark text-zinc-500">Selecteer je rol</option>
+								<option value="fotograaf" class="bg-bg-dark text-white">Fotograaf</option>
+								<option value="model" class="bg-bg-dark text-white">Model</option>
 							</select>
 						</div>
 					</div>
 
-					<button type="submit" class="w-full bg-white text-[#070707] py-4 mt-12 uppercase tracking-wider text-sm font-bold hover:bg-white/90 transition-colors">
+					<button type="submit" class="w-full bg-white text-bg-dbg-bg-dark py-4 mt-12 uppercase tracking-wider text-sm font-bold hover:bg-white/90 transition-colors">
 						Begin je Reis
 					</button>
+
+					<p class="text-center text-zinc-500 mt-4 uppercase tracking-wider text-[10px]">
+						By signing up you agree to our
+						<a href="/terms" class="text-white hover:underline ml-1">Terms of Service</a>.
+					</p>
 
 					<p class="text-center text-zinc-500 mt-8 uppercase tracking-wider text-sm">
 						Al een account? 

@@ -52,6 +52,9 @@ func main() {
 	mux.Handle("GET /public/", http.StripPrefix("/public/", http.FileServerFS(staticSubFS)))
 	mux.HandleFunc("GET /login", sctx.LoginPage)
 	mux.HandleFunc("GET /signup", sctx.SignupPage)
+	mux.HandleFunc("GET /terms", func(w http.ResponseWriter, r *http.Request) {
+		src.Root(pages.Terms()).Render(r.Context(), w)
+	})
 	mux.HandleFunc("GET /profile", sctx.AuthMiddleware(sctx.ProfilePage))
 
 	// api

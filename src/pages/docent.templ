@@ -13,12 +13,12 @@ func boolToString(b bool) string {
 }
 
 templ Docent(data []types.UserProfile) {
-	<main class="min-h-screen bg-[#070707] text-white">
+	<main class="min-h-screen bg-bg-dark text-white">
 		<nav class="flex justify-between items-center py-6 px-8 border-b border-zinc-800">
 			<a href="/" class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-400 hover:text-white transition-colors">← Home</a>
 			<a href="/" id="nav-title" class="font-['Syne'] font-bold uppercase tracking-tighter transition-all duration-500 text-3xl md:text-4xl origin-center">
-                    Grafisch
-            </a>
+				Grafisch
+			</a>
 			<div class="flex items-center gap-6">
 				<span class="text-xs md:text-sm font-medium tracking-[0.2em] uppercase text-zinc-500">Admin</span>
 				<form action="/api/logout" method="POST">
@@ -33,33 +33,69 @@ templ Docent(data []types.UserProfile) {
 				Total Users: <span id="total-users" class="text-white">{ len(data) }</span>
 			</p>
 		</header>
+		<section id="controls" class="px-8 py-6 border-b border-zinc-800 flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+			<div class="flex items-center gap-4">
+				<label for="limit-select" class="text-[10px] uppercase tracking-widest text-zinc-500">Limit</label>
+				<select id="limit-select" class="bg-zinc-900 border border-zinc-800 text-white text-sm px-3 py-2 rounded">
+					<option value="10">10</option>
+					<option value="25">25</option>
+					<option value="50">50</option>
+					<option value="100">100</option>
+				</select>
+			</div>
+			<div class="flex items-center gap-3">
+				<button id="prev-page" class="text-[10px] font-bold letter-spaced-wide border border-zinc-800 px-3 py-2 rounded hover:bg-zinc-800/40 disabled:opacity-40">Prev</button>
+				<span id="page-indicator" class="text-[10px] uppercase tracking-widest text-zinc-500">Page 1</span>
+				<button id="next-page" class="text-[10px] font-bold letter-spaced-wide border border-zinc-800 px-3 py-2 rounded hover:bg-zinc-800/40">Next</button>
+			</div>
+		</section>
 		<section id="users-list">
 			for _, obj := range data {
-				<div class="grid grid-cols-12 gap-4 items-center py-8 border-b border-zinc-900 group hover:bg-zinc-950/50 transition-all duration-500 px-4 -mx-4" data-user-row data-user-id={ obj.ID.String() }>
-					<div class="col-span-5 md:col-span-6 flex items-center gap-6">
+				<div
+					class="grid grid-cols-10 gap-6 items-center px-8 py-6 border-b border-zinc-900
+         max-w-6xl mx-auto group hover:bg-zinc-950/50 transition-all duration-500"
+					data-user-row
+					data-user-id={ obj.ID.String() }
+				>
+					<!-- Profile -->
+					<div class="col-span-5 flex items-center gap-6">
 						<div class="w-16 h-20 bg-zinc-900 overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700">
-							<img src={ "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(obj.ProfileImageData) } alt="profile" class="w-full h-full object-cover"/>
+							<img
+								src={ "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(obj.ProfileImageData) }
+								alt="profile"
+								class="w-full h-full object-cover"
+							/>
 						</div>
 						<div>
 							<h2 class="text-xl font-bold tracking-tight mb-1">{ obj.Name }</h2>
-							<p class="font-editorial italic text-zinc-500 text-sm">{ obj.SchoolEmail }</p>
+							<p class="font-editorial italic text-zinc-500 text-sm">
+								{ obj.SchoolEmail }
+							</p>
 						</div>
 					</div>
-					<div class="col-span-2 text-center">
-						<span class="text-[10px] letter-spaced-wide border border-zinc-800 px-3 py-1 font-bold">{ obj.Role }</span>
+					<!-- Role -->
+					<div class="col-span-2 flex justify-center">
+						<span class="text-[10px] letter-spaced-wide border border-zinc-800 px-3 py-1 font-bold">
+							{ obj.Role }
+						</span>
 					</div>
-					<div class="col-span-3 flex flex-col items-center">
-						<button data-approve-toggle data-current-status={ boolToString(obj.Approved) } class="flex items-center gap-3 transition-opacity hover:opacity-70">
-							<span data-status-label class="text-[9px] font-bold letter-spaced-wide uppercase ">
+					<!-- Approval toggle -->
+					<div class="col-span-3 flex justify-center">
+						<button
+							data-approve-toggle
+							data-current-status={ boolToString(obj.Approved) }
+							class="flex items-center gap-3 hover:opacity-70 transition-opacity"
+						>
+							<span data-status-label class="text-[9px] font-bold letter-spaced-wide uppercase">
 								if obj.Approved {
 									{ "APPROVED" }
 								} else {
-									{ "PENDING" }
+									{ "DISABLED" }
 								}
 							</span>
 							<div class="w-10 h-1.5 bg-zinc-800 rounded-full relative">
-								<div 
-									data-toggle-knob 
+								<div
+									data-toggle-knob
 									class={
 										"absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(255,255,255,0.3)]",
 										templ.KV("bg-white right-0", obj.Approved),
@@ -68,9 +104,6 @@ templ Docent(data []types.UserProfile) {
 								></div>
 							</div>
 						</button>
-					</div>
-					<div class="col-span-2 text-right flex justify-end gap-4">
-						<button data-revoke class="text-[10px] font-bold letter-spaced-wide hover:text-red-500 text-zinc-600 transition-colors">REVOKE</button>
 					</div>
 				</div>
 			}
@@ -82,8 +115,58 @@ templ Docent(data []types.UserProfile) {
 			document.addEventListener('DOMContentLoaded', function() {
 				const list = document.getElementById('users-list');
 				const total = document.getElementById('total-users');
+				const limitSelect = document.getElementById('limit-select');
+				const prevBtn = document.getElementById('prev-page');
+				const nextBtn = document.getElementById('next-page');
+				const pageIndicator = document.getElementById('page-indicator');
+
 				const items = list.querySelectorAll('[data-user-row]');
 				total.textContent = items.length.toString();
+
+				// Read current page & limit from URL
+				const params = new URLSearchParams(window.location.search);
+				let page = parseInt(params.get('page') || '1', 10);
+				let limit = parseInt(params.get('limit') || '50', 10);
+				if (isNaN(page) || page < 1) page = 1;
+				if (isNaN(limit) || limit < 1) limit = 50;
+
+				// Initialize controls
+				if (limitSelect instanceof HTMLSelectElement) {
+					const opt = Array.from(limitSelect.options).find(o => parseInt(o.value, 10) === limit);
+					if (opt) limitSelect.value = opt.value; else limitSelect.value = '50';
+				}
+				if (pageIndicator instanceof HTMLElement) {
+					pageIndicator.textContent = `Page ${page}`;
+				}
+				if (prevBtn instanceof HTMLButtonElement) {
+					prevBtn.disabled = page <= 1;
+				}
+
+				function navigate(newPage, newLimit) {
+					const url = new URL(window.location.href);
+					url.searchParams.set('page', String(newPage));
+					url.searchParams.set('limit', String(newLimit));
+					window.location.href = url.toString();
+				}
+
+				if (limitSelect instanceof HTMLSelectElement) {
+					limitSelect.addEventListener('change', () => {
+						const newLimit = parseInt(limitSelect.value, 10);
+						navigate(1, isNaN(newLimit) ? limit : newLimit);
+					});
+				}
+
+				if (prevBtn instanceof HTMLButtonElement) {
+					prevBtn.addEventListener('click', () => {
+						if (page > 1) navigate(page - 1, limit);
+					});
+				}
+
+				if (nextBtn instanceof HTMLButtonElement) {
+					nextBtn.addEventListener('click', () => {
+						navigate(page + 1, limit);
+					});
+				}
 
 				list.addEventListener('click', async function(e) {
 					const target = e.target;
