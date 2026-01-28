@@ -74,7 +74,6 @@ func (s *ServerContext) OverviewPage(w http.ResponseWriter, r *http.Request) {
 		page = pages.Docent(data)
 		s.cache.Set(sid, page, cache.DefaultExpiration)
 	case "model":
-		// Models don't have an overview page, redirect to their private profile
 		http.Redirect(w, r, "/profile", http.StatusSeeOther)
 		return
 	case "fotograaf":
